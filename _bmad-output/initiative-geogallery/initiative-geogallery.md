@@ -59,6 +59,7 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - Sicherheit: TLS 1.3, CSP, XSS- und CSRF-Schutz, Rate Limiting, Audit Logging; Session-Cookies Secure, HttpOnly, SameSite=Strict (draft §11, §17).
 - Betrieb: strukturierte JSON-Logs, Metrik-Export per OpenTelemetry (draft §18, §19).
 - Originale werden nie verändert; Metadaten werden nie in Dateien zurückgeschrieben (forge §Metadaten, §Verworfen).
+- Reverse-Geocoding darf externe Online-Anbieter mit Fallback-Kette nutzen; GPS-Koordinaten verlassen dafür den Host. Der Bestand wird asynchron über Tage geocodiert, und das Import-Ziel von 10.000 Bildern/h gilt ohne Geocoding (Decision 2026-11-20).
 
 ## Done when
 
@@ -81,13 +82,20 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - forge — _bmad-output/initiative-geogallery/forge-geogallery/forge-geogallery.md, alle Abschnitte (geht bei Widerspruch vor)
 - draft — /Volumes/1TB_NVME/Documents/obsidian-snippets/GeoGallery.md, §2–§19 und Technologie-Stack
 - forge-memlog — _bmad-output/initiative-geogallery/forge-geogallery/.memlog.md, Herleitung der Forge-Entscheidungen
+- prior-art — /Users/zb_bamboo/Documents/DEV/CPP/gallery_snippets: Kandidaten zur Wiederverwendung, entschieden in der Architektur. Am nächsten dran: `drogon_auth` (TOTP, RBAC, gRPC-Health), `drogon_audit_plugin` (Audit-Log), `geocoding` (Multi-Provider-Reverse-Geocoding mit Fallback und Kontingenten), `img2avif` (AVIF in mehreren Größen), `web-gallery_backend_h2o-drogon` (H2O+Drogon, Ort aus Ordnern, ER-Modell), `photo_indexer` (Metadaten-Benchmark)
 
 ## Notes
 
 - Decision: 2026-11-20, Nutzer — bei Widerspruch gilt forge vor draft. Danach entschieden: kein NATS, keine FlatBuffers, 99,5 % statt 99,9 %, 10 statt 50 Uploads, `/storage/uploads` statt `/storage/temp`, Slideshow/PWA/pHash/RAW in V1.x.
 - Assumption: „privat“ gilt auch gegenüber dem Admin in der Anwendung; technischer Dateizugriff auf dem Host bleibt möglich (forge §Nutzer und Sichtbarkeit).
 - Assumption: Ablage auf dem lokalen Dateisystem unter `/storage`; MinIO/S3 (draft §14) erst mit der Erweiterung „S3-native“.
-- Open question: Datenquelle für Reverse-Geocoding (Nominatim / GeoNames / Natural Earth + Verwaltungsgrenzen) und Umgang mit der uneinheitlichen Ebene „Region“. R17 wartet darauf; Weg: `bmad-deep-recon`.
+- Assumption: Bis ein Bild geocodiert ist, gilt sein Ort aus dem Ordnerpfad („ungefähr“) oder „Ort fehlt“, wie in R18.
+- Decision: 2026-11-20, Nutzer — die Snippets in `gallery_snippets` sind Kandidaten zur Wiederverwendung (prior-art), keine Quelle für Anforderungen; die Wiederverwendung entscheidet die Architektur.
+- Decision: 2026-11-20, Nutzer — Reverse-Geocoding über Online-Anbieter mit Fallback ist erlaubt (siehe Constraints).
+- Open question: Reverse-Geocoding läuft über die eigene `geocoding`-Bibliothek mit Online-Anbietern. Offen sind die Reihenfolge der Anbieter und ihre Kontingente sowie der Umgang mit der uneinheitlichen Ebene „Region“. R17 wartet darauf; Weg: `bmad-deep-recon`.
+- Source conflict: R2 und Constraints — `drogon_auth` und `web-gallery_backend_h2o-drogon` melden mit Passwort+TOTP und JWT an, verlangt sind Passkey und Cookie-Sessions.
+- Source conflict: R6 und Stack — `img2avif` übernimmt auf Wunsch EXIF/XMP in Ableitungen und liest per stb_image (HEIC fraglich) statt libvips.
+- Source conflict: Architektur — `photo_indexer` nutzt FlatBuffers (verworfen); `rz-gallery_*` (Crow, Gateway, JWT, Docker) und das Schema von `web-gallery_worker` (`access_group DEFAULT 'public'`) widersprechen Ein-Host/systemd und R4.
 - Open question: Zielhardware unbekannt; Import-Durchsatz und Leistungsziele müssen dagegen validiert werden.
 - Open question: Der Datei-Zeitstempel als Fallback ist unzuverlässig (Kopie/Download). Soll ein Bild als „Zeit unsicher“ gekennzeichnet werden?
 - Open question: Wird der beim Upload mitgegebene Pfad auch als Album angelegt?
