@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoGallery Schmiedebericht</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--ink:#2b2420;--muted:#6f645a;--line:#e2d7c5;--seal:#9b1c1c;--ok:#2f6b3a;--warn:#a05a00;--kill:#7a1f1f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1815;--card:#25211d;--ink:#efe7da;--muted:#b3a593;--line:#3b342d;--seal:#c23a3a;--ok:#6fbf7d;--warn:#e0a24a;--kill:#e07a7a}}
+:root[data-theme="dark"]{--bg:#1b1815;--card:#25211d;--ink:#efe7da;--muted:#b3a593;--line:#3b342d;--seal:#c23a3a;--ok:#6fbf7d;--warn:#e0a24a;--kill:#e07a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Georgia,"Iowan Old Style",serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+header{display:flex;gap:24px;align-items:center;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:20px}
+header h1{margin:0;font-size:2rem}
+header p{margin:.3rem 0 0;color:var(--muted)}
+.seal{flex:0 0 150px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:20px}
+h2{margin:0 0 10px;font-size:1.2rem}
+ul{margin:0;padding-left:1.2rem}
+li{margin:.25rem 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tag{display:inline-block;font:12px/1 system-ui,sans-serif;padding:3px 7px;border-radius:999px;border:1px solid currentColor;margin-right:6px}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.kill{color:var(--kill)}
+.cast{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.cast div{border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+.cast b{display:block}
+.cast small{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+footer{margin-top:28px;color:var(--muted);font-size:.9rem;text-align:center}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <svg class="seal" viewBox="0 0 200 200" role="img" aria-label="Siegel: HARDENED">
+    <defs><path id="circ" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"/></defs>
+    <path fill="var(--seal)" d="M100 8c10 0 14 9 23 11s17-4 24 2 4 15 9 22 15 9 17 18-6 15-6 24 8 16 4 25-14 8-20 15-4 17-13 21-16-3-25-1-16 9-25 6-9-12-17-16-17-1-22-9 1-17-3-25-13-12-12-21 10-12 12-21-3-17 4-23 16-2 24-6 8-14 17-17z"/>
+    <circle cx="100" cy="100" r="62" fill="none" stroke="#fff3" stroke-width="3"/>
+    <text font-family="Georgia,serif" font-size="13" fill="#fff" letter-spacing="3"><textPath href="#circ">GEOGALLERY · GESCHMIEDET · 2026-11-20 ·</textPath></text>
+    <text x="100" y="96" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="22" fill="#fff">HARDENED</text>
+    <text x="100" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#fff">✦ 40+ Locks ✦</text>
+  </svg>
+  <div>
+    <h1>GeoGallery – Schmiedebericht</h1>
+    <p>Selbst gehostete, geografisch organisierte Bildverwaltung für eine feste Gruppe mit ~200.000 Bildern (Ziel 1 Mio.) und öffentlicher Galerie.</p>
+    <p><span class="tag ok">Ergebnis: gehärtet</span><span class="tag">Ziel: Schärfen</span><span class="tag">20.11.2026</span></p>
+  </div>
+</header>
+
+<section>
+  <h2>Festgelegte Entscheidungen</h2>
+  <div class="grid">
+    <div><b>Nutzer & Sichtbarkeit</b><ul>
+      <li>Feste Gruppe, gemeinsames Archiv</li>
+      <li>Rollen = was man tut; Gruppen = was man sieht</li>
+      <li>public / angemeldet / Gruppen / privat</li>
+      <li>Restriktivste Einstellung gewinnt</li>
+      <li>Veröffentlichen über Album (<code>album.publish</code>), Bilder ausschließbar</li></ul></div>
+    <div><b>Metadaten</b><ul>
+      <li>Nur Originale tragen EXIF/IPTC/XMP</li>
+      <li>Ableitungen leer bis auf Copyright</li>
+      <li>Öffentliche Positivliste: global → Album → Bild</li>
+      <li>GPS pro Album: exakt / vergröbert / aus</li>
+      <li>Originale unveränderlich, Edits nur in DB</li></ul></div>
+    <div><b>Import & Ablage</b><ul>
+      <li>Admin: SCP/SFTP; sonst Web (später Apps)</li>
+      <li>Verschieben in vom Nutzer gelieferte Ordnerstruktur</li>
+      <li><code>yyyy-mm-dd_hhmmss.ext</code> + Zähler</li>
+      <li>Pfad nach Import fix, Verschieben nur in DB</li>
+      <li>SHA256-Duplikate geparkt</li></ul></div>
+    <div><b>Ort</b><ul>
+      <li>GPS + Reverse-Geocoding = Wahrheit für Karte</li>
+      <li>Ordnerpfad = Herkunft, eigene Navigation</li>
+      <li>Ohne GPS: Ort aus Ordner („ungefähr“)</li>
+      <li>Widerspruch → Prüfliste</li></ul></div>
+    <div><b>Architektur & Betrieb</b><ul>
+      <li>Ein Host, systemd-Units</li>
+      <li>gRPC über UDS + PostgreSQL-Job-Queue</li>
+      <li>99,5 %, Datensicherheit vor HA</li>
+      <li>RPO 0 (Originale), RTO ≤ 24 h</li></ul></div>
+    <div><b>Performance (1 Mio. Bilder)</b><ul>
+      <li>Karte &lt; 300 ms (Clustering)</li>
+      <li>Raster &lt; 150 ms, Suche &lt; 200 ms p95</li>
+      <li>Import ≥ 10.000 Bilder/h</li>
+      <li>UI bleibt flüssig während Import</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Verworfen – und warum</h2>
+  <table>
+    <tr><th>Option</th><th>Grund</th></tr>
+    <tr><td class="kill">NATS</td><td>Zusätzliche Infrastruktur; Pipeline-Status gehört transaktional in PostgreSQL</td></tr>
+    <tr><td class="kill">FlatBuffers</td><td>Dritte Serialisierung ohne Mehrwert</td></tr>
+    <tr><td class="kill">99,9 % Verfügbarkeit</td><td>Mit einem Host nicht verlässlich; Datenverlust ist das echte Risiko</td></tr>
+    <tr><td class="kill">50 gleichzeitige Uploads</td><td>Kein realer Lastfall; Durchsatz zählt</td></tr>
+    <tr><td class="kill">Freigabe-Links</td><td>Öffentliche Galerie über Alben genügt</td></tr>
+    <tr><td class="kill">Metadaten in Ableitungen</td><td>GPS, Seriennummern, Personen würden öffentlich</td></tr>
+    <tr><td class="kill">Rückschreiben in Originale</td><td>Bricht SHA256, Duplikaterkennung und Backup</td></tr>
+    <tr><td class="kill">Rechte pro Person/Bild</td><td>Gruppen + privat reichen für eine feste Gruppe</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Schwachstellen, die übrig bleiben</h2>
+  <ul>
+    <li class="warn">Datenquelle fürs Reverse-Geocoding offen; „Region“ ist international uneinheitlich → <code>bmad-deep-recon</code></li>
+    <li class="warn">Zielhardware unbekannt – Import-Durchsatz muss dagegen geprüft werden</li>
+    <li class="warn">Datei-Zeitstempel als Fallback unzuverlässig (Kopie/Download setzt ihn neu)</li>
+    <li class="warn">Physischer Pfad wird nach GPS-/Ortskorrektur zur reinen Herkunftsangabe</li>
+    <li class="warn">Zählervergabe bei parallelen Workern muss atomar sein</li>
+    <li class="warn">Offen: wird der Upload-Pfad des Nutzers automatisch zum Album?</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Scope</h2>
+  <ul>
+    <li><b>V1:</b> Import + Web-Upload, Pipeline, gängige Formate inkl. HEIC, Ortsmodell, Raster/Detail/Karte, Suche/Filter, Passkey + TOTP, Rollen/Gruppen/Sichtbarkeit, öffentliche Galerie, Metadaten-Edit/Bewertung/Tags, Monitoring, Backup/Restore</li>
+    <li><b>V1.x:</b> Slideshow, PWA, XMP-Sidecar-Export, pHash, RAW</li>
+    <li><b>Später:</b> Desktop-App, Mobile-App, Zukunftserweiterungen</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Wer geschmiedet hat</h2>
+  <div class="cast">
+    <div><b>📋 John</b><small>Product Manager – „Wessen Bilder? Wo ist die Linie für V1?“</small></div>
+    <div><b>📊 Mary</b><small>Business Analyst – gemeinsames Archiv vs. Infrastruktur; GPS-Quote</small></div>
+    <div><b>🎨 Sally</b><small>UX Designer – „Veröffentlichung ohne Link ist nur ein Wort“; gefühlte Performance</small></div>
+    <div><b>🏗️ Winston</b><small>System Architect – Rollen ≠ Gruppen, ein Host, zwei Ortsquellen</small></div>
+    <div><b>💻 Amelia</b><small>Senior Engineer – Importrechnung, Kollisionen, drei Mechanismen</small></div>
+    <div><b>🔒 Vex</b><small>Security – öffentlicher Teil vor dem Archiv, GPS bis zur Haustür</small></div>
+    <div><b>😤 Grumbal</b><small>Adversary – kaskadierende Einstellungen, drei Clients</small></div>
+    <div><b>🧳 Henrik Lund</b><small>Reisefotograf – „Ich finde nichts wieder“</small></div>
+    <div><b>👵 Ingrid Weber</b><small>Familienchronistin – private Bilder</small></div>
+    <div><b>🛡️ Dr. Petra Kalb</b><small>Datenschutz – DSGVO, Personenfotos</small></div>
+    <div><b>📸 Tomás Rivera</b><small>Vereinsfotograf – Album statt Einzelklick</small></div>
+    <div><b>🕵️ Marlene Ost</b><small>OSINT – was Metadaten verraten</small></div>
+    <div><b>👨‍👧 Kai Brenner</b><small>Zwei Welten, eine Person</small></div>
+    <div><b>🗄️ Bernd Hollaender</b><small>Linux-Admin – keine doppelten 3 TB</small></div>
+    <div><b>📱 Sophie Lindqvist</b><small>Handy-Upload, gleiche Dateinamen</small></div>
+    <div><b>🏃 Jonas Feld</b><small>20 Bilder pro Sekunde</small></div>
+    <div><b>🌍 Dr. Aylin Demir</b><small>Geoinformatik – keine Stadt auf dem Meer</small></div>
+    <div><b>🧭 Elif Arslan</b><small>Touren statt Verwaltungsgrenzen</small></div>
+    <div><b>🖥️ Rainer Kowalski</b><small>„Die Datenbank darf kein Gefängnis sein“</small></div>
+    <div><b>🏠 Sven Ritter</b><small>Homeserver – Backup vor Uptime</small></div>
+    <div><b>🔧 Lea Hoffmann</b><small>Allein-Maintainerin – langweilige Infrastruktur</small></div>
+    <div><b>📈 Felix Brandt</b><small>Performance – Durchsatz statt Parallelität</small></div>
+  </div>
+</section>
+
+<footer>Geschmiedet mit BMad Forge Idea · Quelle: forge-geogallery.md &amp; .memlog.md</footer>
+</main>
+</body>
+</html>
