@@ -37,14 +37,14 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - R13 (forge §Architektur, §Scope; draft §3.2, §3.3): Die Pipeline verarbeitet JPEG, PNG, TIFF, HEIC, AVIF und WebP: Hash, Metadaten, Geo-Validierung, AVIF, Vorschaubilder, DB-Eintrag. Jeder Job zeigt seinen Status, wird bei Fehlern wiederholt und endet sonst in einem sichtbaren Fehlerzustand.
 - R14 (forge §Metadaten; draft §4, §9): Alle EXIF-, IPTC- und XMP-Metadaten landen beim Import in der DB und werden aus ihr angezeigt; angemeldete Nutzer sehen sie vollständig in der Detailansicht.
 - R15 (forge §Metadaten; draft §13): Berechtigte bearbeiten Metadaten nur in der DB; der Originalwert bleibt daneben erhalten und einsehbar, angezeigt wird der bearbeitete.
-- R16 (forge §Metadaten): Ein Bild hat genau eine Bewertung 0–5 und frei vergebene, global sichtbare Tags; Autor ist der Fotograf aus EXIF/IPTC, getrennt vom Owner (Uploader).
+- R16 (forge §Metadaten; Decision 2026-11-20): Ein Bild hat genau eine Bewertung 0–5 und frei vergebene, global sichtbare Tags; IPTC/XMP-Keywords werden beim Import zu Tags. Autor ist der Fotograf aus EXIF/IPTC, getrennt vom Owner (Uploader).
 - R17 (forge §Ortsmodell; draft §5): Ein Bild mit GPS erhält per Reverse-Geocoding Kontinent/Land/Provinz/Region/Stadt; dieser Ort ist die Wahrheit für Karte, Geo-Navigation und Geo-Filter.
 - R18 (forge §Ortsmodell): Ein Bild ohne GPS erhält seinen Ort aus dem Ordnerpfad, markiert als „ungefähr“, sonst erscheint es unter „Ort fehlt“; weichen Ordner und GPS voneinander ab, landet es auf einer Prüfliste.
 - R19 (forge §Ortsmodell, §Scope): Nutzer navigieren nach Ort (Kontinent bis Stadt) und nach dem Ordnerbaum.
 - R20 (forge §Performance; draft §5): Die Karte clustert serverseitig, und Nutzer suchen auf ihr per Radius, Polygon und Bounding Box.
 - R21 (draft §9): Das Raster ist responsiv und lädt per Lazy Loading und Infinite Scroll nach; die Detailansicht zeigt Bild, Metadaten, Karte, Tags und Bewertung.
 - R22 (draft §7): Die Volltextsuche durchsucht Titel, Beschreibung, Keywords, Kamera und Objektiv; Filter nach Land, Region, Stadt, Kamera, Objektiv, Jahr, Monat, Autor, Bewertung und Tags lassen sich per UND kombinieren.
-- R23 (forge §Scope; draft §13, §19): Der Admin sieht Worker, Job-Queue, Datenbank, Speicherverbrauch, geparkte Duplikate und die Prüfliste und stößt ein Reindexing an; Metriken (Uploads/s, Jobs, Queue-Länge, API-Antwortzeiten, DB-Latenz) werden erfasst.
+- R23 (forge §Scope; draft §13, §19): Der Admin sieht Worker, Job-Queue, Datenbank, Speicherverbrauch, geparkte Duplikate und die Prüfliste. Er stößt für ausgewählte oder alle Bilder ein Reindexing an: Metadaten neu aus dem Original (bearbeitete Werte bleiben), Ableitungen und Suchindex neu. Metriken (Uploads/s, Jobs, Queue-Länge, API-Antwortzeiten, DB-Latenz) werden erfasst.
 - R24 (forge §Architektur und Betrieb): Originale gehen nie verloren (RPO 0), die DB hat PITR, ein dokumentierter Restore ist getestet und dauert ≤ 24 h; Ableitungen werden aus Originalen neu erzeugt.
 - R25 (forge §Architektur und Betrieb): Ist die Anwendung nicht erreichbar, zeigt die öffentliche Galerie eine statische Wartungsseite.
 - R26 (draft §13; Decision 2026-11-20): Wer `image.delete` hat, verschiebt ein Bild in den Papierkorb, wo es überall unsichtbar und wiederherstellbar ist. Nur ein Admin löscht endgültig Original und Ableitungen; Backups laufen nach ihrer Aufbewahrungsfrist aus.
@@ -80,6 +80,10 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - Später: Desktop- und Mobile-App sowie die Zukunftserweiterungen des Entwurfs (Gesichtserkennung, KI-Klassifikation, Landmarken, Ähnlichkeitssuche, Multi-Tenant, S3-native/MinIO, OpenSearch, Föderation) (forge §Scope; draft §14, §20).
 - Verworfen: NATS, FlatBuffers, 99,9 % Verfügbarkeit, 50 gleichzeitige Uploads, Freigabe-Links, Metadaten in Ableitungen, Rückschreiben in Originale, Rechte pro Person/Bild, offene Registrierung (forge §Verworfen, §Nutzer und Sichtbarkeit).
 - Kein Multi-Host-Betrieb.
+- Touch point: Online-Geocoding-Anbieter (Nominatim, Google, OpenCage, Bing) — per eigener `geocoding`-Bibliothek abgefragt; owner: epic-ort-karte
+- Touch point: Kartenkachel-Quelle — für die Kartenansicht eingebunden; owner: epic-ort-karte
+- Touch point: SCP/SFTP-Server des Hosts (OpenSSH) — für den Admin-Import konfiguriert; owner: epic-import-pipeline
+- Touch point: Backup-Ziel — für Originale (RPO 0) und DB-PITR genutzt; owner: epic-datensicherheit-betrieb
 - Tracer-Pfad: Web-Upload → Import und Pipeline → Metadaten und Ortsmodell → Sichtbarkeit → Raster/Karte für Angemeldete → public-Album in der öffentlichen Galerie.
 
 ## References
@@ -103,5 +107,7 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - Source conflict: Architektur — `photo_indexer` nutzt FlatBuffers (verworfen); `rz-gallery_*` (Crow, Gateway, JWT, Docker) und das Schema von `web-gallery_worker` (`access_group DEFAULT 'public'`) widersprechen Ein-Host/systemd und R4.
 - Decision: 2026-11-20, Nutzer — die Zielhardware steht noch nicht fest. Die Architektur nennt eine Mindestausstattung, und erst gegen diese werden Import-Durchsatz und Leistungsziele verbindlich gemessen.
 - Decision: 2026-11-20, Nutzer — Zeit unsicher (R27), Pfad ≠ Album (R28), Papierkorb (R26), Sichtbarkeitsrechte (R29), Datenschutz beim Veröffentlichen ohne Gesichtserkennung (R30), Copyright-Kette (R31).
+- Decision: 2026-11-20, Nutzer — Epic-Schnitt nach der Regel „ein Epic = eine Fähigkeit der Quelle, gemeinsam geliefert“; 8 Epics in `tickets/tickets.toml`. Der Sichtbarkeitsfilter (angemeldet/Gruppen/privat) entsteht früh in epic-import-pipeline, damit Raster, Suche und Karte von Anfang an mit ihm messen; Alben, Vererbung und Bedienung kommen in epic-alben-sichtbarkeit. Der echte Bestand wird erst nach epic-datensicherheit-betrieb importiert.
+- Decision: 2026-11-20, Nutzer — geteilte Entscheidungen (DB-Schema, gRPC/Protobuf-Verträge, Storage-Layout, Job-Queue, Sichtbarkeitsfilter, 1-Mio.-Testbestand, Wiederverwendung der Snippets, Mindesthardware) legt eine Architektur-Spine per `bmad-architecture` fest; die Epics verweisen darauf.
 - Open question: Zielhardware; die Architektur legt die Mindestausstattung fest.
-- Open question: Wie lange werden Backups nach endgültigem Löschen aufbewahrt? Das zählt bei Löschwünschen (R26, R30).
+- Decision: 2026-11-20, Nutzer — Backups werden nach endgültigem Löschen 90 Tage aufbewahrt; danach ist das Bild auch aus den Backups entfernt (R26, R30).
