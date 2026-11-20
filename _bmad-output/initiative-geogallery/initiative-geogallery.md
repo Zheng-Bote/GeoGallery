@@ -47,7 +47,12 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - R23 (forge §Scope; draft §13, §19): Der Admin sieht Worker, Job-Queue, Datenbank, Speicherverbrauch, geparkte Duplikate und die Prüfliste und stößt ein Reindexing an; Metriken (Uploads/s, Jobs, Queue-Länge, API-Antwortzeiten, DB-Latenz) werden erfasst.
 - R24 (forge §Architektur und Betrieb): Originale gehen nie verloren (RPO 0), die DB hat PITR, ein dokumentierter Restore ist getestet und dauert ≤ 24 h; Ableitungen werden aus Originalen neu erzeugt.
 - R25 (forge §Architektur und Betrieb): Ist die Anwendung nicht erreichbar, zeigt die öffentliche Galerie eine statische Wartungsseite.
-- R26 (draft §13): Wer `image.delete` hat, löscht Bilder; die Bedeutung von Löschen ist offen (siehe Notes).
+- R26 (draft §13; Decision 2026-11-20): Wer `image.delete` hat, verschiebt ein Bild in den Papierkorb, wo es überall unsichtbar und wiederherstellbar ist. Nur ein Admin löscht endgültig Original und Ableitungen; Backups laufen nach ihrer Aufbewahrungsfrist aus.
+- R27 (Decision 2026-11-20): Ein Bild ohne Aufnahmezeit in den Metadaten trägt das Kennzeichen „Zeit unsicher“ und ist danach filterbar; Berechtigte korrigieren die Zeit in der DB, der Dateiname bleibt.
+- R28 (Decision 2026-11-20): Ordnerbaum und Alben sind getrennt: Ein Upload legt nie ein Album an, Alben werden bewusst angelegt und befüllt, und ein Bild kann in mehreren Alben liegen.
+- R29 (Decision 2026-11-20): Der Owner setzt jede Sichtbarkeit seiner Alben und Bilder. Ein Admin ändert bei fremden Inhalten Gruppen- und public-Sichtbarkeit, public nur mit `album.publish`; Privates sieht und setzt kein Admin.
+- R30 (Decision 2026-11-20): Beim Veröffentlichen bestätigt man, dass die Einwilligungen abgebildeter Personen vorliegen. Ein Bild lässt sich in einem Schritt aus allen public-Alben zurücknehmen, und die öffentliche Galerie verlinkt Impressum, Datenschutz und Kontakt.
+- R31 (Decision 2026-11-20): Das Copyright einer Ableitung ist das des Bildes (bearbeiteter Wert vor Dateiwert), sonst „© <Jahr> <Autor>“, sonst ein globaler Default des Admins.
 
 ## Constraints
 
@@ -96,10 +101,7 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - Source conflict: R2 und Constraints — `drogon_auth` und `web-gallery_backend_h2o-drogon` melden mit Passwort+TOTP und JWT an, verlangt sind Passkey und Cookie-Sessions.
 - Source conflict: R6 und Stack — `img2avif` übernimmt auf Wunsch EXIF/XMP in Ableitungen und liest per stb_image (HEIC fraglich) statt libvips.
 - Source conflict: Architektur — `photo_indexer` nutzt FlatBuffers (verworfen); `rz-gallery_*` (Crow, Gateway, JWT, Docker) und das Schema von `web-gallery_worker` (`access_group DEFAULT 'public'`) widersprechen Ein-Host/systemd und R4.
-- Open question: Zielhardware unbekannt; Import-Durchsatz und Leistungsziele müssen dagegen validiert werden.
-- Open question: Der Datei-Zeitstempel als Fallback ist unzuverlässig (Kopie/Download). Soll ein Bild als „Zeit unsicher“ gekennzeichnet werden?
-- Open question: Wird der beim Upload mitgegebene Pfad auch als Album angelegt?
-- Open question: Was bedeutet Löschen (R26): Original physisch entfernen, inkl. Backups, oder nur logisch? Und wer darf löschen?
-- Open question: Datenschutz/DSGVO der öffentlichen Galerie (erkennbare Personen, Einwilligung, Löschwunsch). Beide Quellen schweigen dazu.
-- Open question: Wer setzt Gruppen- oder public-Sichtbarkeit auf fremden Alben/Bildern: nur der Owner oder auch Editor/Admin?
-- Open question: Woher kommt der Copyright-Wert in den Ableitungen (Feld, Fallback)?
+- Decision: 2026-11-20, Nutzer — die Zielhardware steht noch nicht fest. Die Architektur nennt eine Mindestausstattung, und erst gegen diese werden Import-Durchsatz und Leistungsziele verbindlich gemessen.
+- Decision: 2026-11-20, Nutzer — Zeit unsicher (R27), Pfad ≠ Album (R28), Papierkorb (R26), Sichtbarkeitsrechte (R29), Datenschutz beim Veröffentlichen ohne Gesichtserkennung (R30), Copyright-Kette (R31).
+- Open question: Zielhardware; die Architektur legt die Mindestausstattung fest.
+- Open question: Wie lange werden Backups nach endgültigem Löschen aufbewahrt? Das zählt bei Löschwünschen (R26, R30).
