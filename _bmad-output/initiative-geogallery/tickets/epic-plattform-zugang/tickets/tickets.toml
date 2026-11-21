@@ -1,0 +1,137 @@
+# epic-plattform-zugang: Stories in Build-Reihenfolge. Tracer zuerst, danach die unsicherste Story (Passkey).
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: Browser erreicht über H2O, api und iam die Datenbank"
+description = "Legt die Repos und Ordner an (contracts/, deploy/, libs/service-core, services/api, services/iam, web/), baut H2O-Master mit mruby und TLS 1.3, das geogallery-Image mit systemd und je einer Unit, einem Unix-User und einem Socket für api und iam (Socket Activation), den postgresql-Container mit PG 18 + PostGIS + PGroonga und dem Schema iam (DB-Zugang aus der mit XChaCha20-Poly1305 verschlüsselten Datei, Schlüssel als Podman-Secret, AD-26), alles als Podman-Quadlets in der dev-Umgebung; die Angular-Shell (Spartan/UI) zeigt den Health-Stand, den die api per gRPC über UDS bei iam abfragt. Beweist die beiden riskantesten Teile: H2O ohne Releases und mehrere Socket-aktivierte Units im Container."
+verify = "Im Browser zeigt https://<dev-host>/ die Angular-Shell mit „api: gesund, iam: gesund, db: gesund“; nach `systemctl stop iam` im Container startet die nächste Anfrage iam per Socket Activation neu und zeigt wieder „gesund“."
+covers = []
+after = []
+hitl = true
+risk = "high"
+notes = ["Person stellt die dev-Umgebung bereit, legt die GitHub-Repos an und setzt die Podman-Secrets."]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Erster Admin richtet seinen Passkey ein und meldet sich an"
+description = "Bootstrap-Kommando in iam legt den ersten Admin an und gibt einen Einmal-Einrichtungslink aus; über ihn registriert der Admin einen Passkey, geprüft vom neuen Rust-Service webauthn (webauthn-rs, zustandslos, Credentials und Challenges besitzt iam), und meldet sich an; iam führt die Session serverseitig, die api setzt das Cookie Secure/HttpOnly/SameSite=Strict und löst es je Request zu einem Principal auf."
+verify = "Ein frischer Bootstrap gibt einen Link aus; damit registriert eine Person einen Passkey und landet angemeldet in der Shell; ein zweiter Bootstrap-Aufruf und ein zweites Öffnen des Links werden abgewiesen; ohne Cookie liefert eine geschützte Route 401."
+covers = ["R1", "R3", "R4"]
+after = [1]
+hitl = true
+risk = "high"
+notes = ["Eine Person registriert den Passkey mit einem echten Authenticator."]
+
+[[entry]]
+id = 3
+type = "story"
+title = "CI baut jedes Repo, ein Release-Manifest rollt das Image aus"
+description = "GitHub Actions in jedem Repo, das Story 1 und 2 angelegt haben (Build, Tests, buf breaking für contracts/); releases/ im Haupt-Repo pinnt je Release die Tags von api, iam, webauthn, service-core, contracts und web; nur aus dem Manifest wird das geogallery-Image gebaut, privat nach GHCR gepusht und in der dev-Umgebung per Quadlet ausgerollt."
+verify = "Ein Merge auf main in einem Service-Repo läuft grün durch; ein neues Manifest erzeugt ein Image in GHCR, das in der dev-Umgebung läuft und dessen Health-Seite die Versionen aus dem Manifest zeigt; eine brechende Proto-Änderung lässt CI scheitern."
+covers = []
+after = [2]
+hitl = true
+risk = "medium"
+notes = ["Person richtet GHCR-Zugang und Deploy-Zugang zur dev-Umgebung ein."]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Services nehmen nur Aufrufe aus dem erlaubten Graphen an"
+description = "service-core liest je Verbindung SO_PEERCRED und prüft jede Methode gegen access.yaml; ein Principal wird nur von der uid der api angenommen; Socket-Rechte je Aufrufergruppe; JSON-Logs mit requestId nach journald und OTel an den lokalen Collector, für api, iam und webauthn."
+verify = "Ein Testaufruf an iam aus einem anderen Unix-User als api wird mit PERMISSION_DENIED abgewiesen; journald zeigt JSON-Einträge mit gleicher requestId in api und iam."
+covers = []
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Audit-Log hält Anmeldungen und Kontoereignisse fest"
+description = "drogon_audit_plugin als api-Plugin in das Schema audit (Besitzer api, ohne FK auf Nutzer), mit inhaltsfreien Einträgen nach AD-44; erste Ereignisse An- und Abmeldung sowie Bootstrap, weitere Ereignisse hängen spätere Stories an."
+verify = "Nach einer Anmeldung und Abmeldung zeigt das Schema audit beide Ereignisse mit Zeit, Konto-ID und requestId, ohne weitere Inhalte."
+covers = []
+after = [2]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Rollen bestimmen, was ein Konto tun darf"
+description = "contracts/permissions/ als geschlossene Liste (u. a. image.*, user.*, album.publish, system.admin), Standardrollen Viewer, Editor, Admin mit einer Zuordnung, die der Nutzer freigibt; iam liefert die Berechtigungen im Principal, der Datenbesitzer prüft sie (AD-10); eine abgewiesene Aktion landet im Audit-Log."
+verify = "Ein Viewer ruft eine Admin-Aktion auf und bekommt 403 im Envelope, das Audit-Log hält den Versuch fest; derselbe Aufruf als Admin gelingt."
+covers = ["R6"]
+after = [4, 5]
+hitl = true
+risk = "medium"
+notes = ["Nutzer gibt die Zuordnung Rolle -> Berechtigungen im Review frei."]
+
+[[entry]]
+id = 7
+type = "story"
+title = "Admin verwaltet Konten, Rollen und Gruppen in der Oberfläche"
+description = "Erstes Modul der Angular-Admin-Oberfläche: Konto anlegen (mit Einmal-Einrichtungslink, 24 h), Rollen und Gruppen zuweisen, Gruppen anlegen, Status aktiv/deaktiviert/gesperrt setzen; eine Deaktivierung oder Sperre beendet laufende Sessions nach spätestens 60 s; jede Änderung im Audit-Log."
+verify = "Der Admin legt ein Konto mit Rolle und Gruppe an, das Mitglied richtet über den Link einen Passkey ein und meldet sich an; nach Sperren des Kontos ist seine laufende Session nach höchstens 60 s ungültig, und eine neue Anmeldung wird abgewiesen."
+covers = ["R2", "R3"]
+after = [6]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Mitglieder richten TOTP ein und melden sich damit an"
+description = "Auf der Einrichtungsseite richtet das Mitglied optional TOTP nach RFC 6238 ein (QR-Code, Bestätigung per Code); die Anmeldung mit Benutzername und TOTP-Code ist ein vollwertiger Ersatz für den Passkey, mit einer Fehlversuchsbremse je Konto in iam (das allgemeine Rate Limit pro Session und IP baut Story 10)."
+verify = "Ein Mitglied richtet TOTP ein und meldet sich ohne Passkey nur mit Benutzername und Code an; ein falscher oder alter Code wird abgewiesen, wiederholte Fehlversuche werden gebremst."
+covers = ["R3", "R4"]
+after = [7]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Admin setzt verlorene Faktoren zurück"
+description = "Der Admin entfernt alle Passkeys und TOTP eines Kontos, beendet dessen Sessions und erzeugt einen neuen Einrichtungslink; beides steht im Audit-Log."
+verify = "Nach dem Zurücksetzen scheitert die Anmeldung mit altem Passkey und altem TOTP, der neue Link richtet einen neuen Passkey ein, und das Audit-Log zeigt Zurücksetzen und Link."
+covers = ["R5"]
+after = [8]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Edge und api setzen die Sicherheitsregeln durch"
+description = "CSRF-Token für alle zustandsändernden Requests (api und Angular-Interceptor), Rate Limit pro Session und IP in der api, CSP ohne unsafe-inline/unsafe-eval in H2O, nur TLS 1.3, X-Request-ID als Envelope-id; ein automatisierter Check prüft Header und Cookie-Flags."
+verify = "Ein zustandsändernder Request ohne CSRF-Token wird abgewiesen; ein Schwall Anfragen bekommt 429; ein TLS-1.2-Handshake scheitert; der Header-Check meldet CSP und Cookie-Flags korrekt."
+covers = []
+after = [7]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 11
+type = "story"
+title = "Wartungsseite und Neustart ohne Fehlerantwort"
+description = "H2O liefert die statische Wartungsseite, wenn der api-Socket nicht antwortet; ein Service-Neustart im laufenden Container (systemctl restart) wird per Socket Activation gepuffert, und ein Image-Wechsel zeigt die Wartungsseite als geplantes Verhalten."
+verify = "Mit gestoppter api zeigt jede Adresse die Wartungsseite; ein Lasttest während `systemctl restart api` und `systemctl restart iam` zählt keine Fehlerantwort."
+covers = ["R7"]
+after = [3, 10]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 12
+type = "story"
+title = "Refactor sweep"
+description = "Aufräumen aus den Plänen und Review-Funden, die das Epic zurückgestellt hat; nur Cleanup, neue Funktion wird eine eigene Story."
+verify = "Alle Tests und die Checks aus Done when laufen nach dem Sweep weiter grün."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+hitl = false
+risk = "low"
