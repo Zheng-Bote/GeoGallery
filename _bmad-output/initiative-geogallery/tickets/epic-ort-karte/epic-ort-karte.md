@@ -14,7 +14,7 @@ risk: high
 
 ## Description
 
-GPS wird über die Fallback-Kette der Online-Anbieter reverse-geocodiert (asynchron, für den Bestand über Tage), Bilder ohne GPS bekommen den Ort aus dem Ordner oder landen unter 'Ort fehlt', Abweichungen auf der Prüfliste mit Admin-Ansicht; Navigation nach Ort und Ordnerbaum, Karte mit Kartenkacheln und serverseitigem Clustering < 300 ms, Suche per Radius, Polygon, Bounding Box sowie Filter Land/Region/Stadt bei 1 Mio. Bildern aus dem Testbestand von epic-raster-suche.
+GPS wird über die Fallback-Kette der Online-Anbieter reverse-geocodiert (asynchron, für den Bestand über Tage), Bilder ohne GPS bekommen den Ort aus dem Ordner oder landen unter 'Ort fehlt', Abweichungen auf der Prüfliste mit Admin-Ansicht; Navigation nach Ort und Ordnerbaum, Karte mit Kartenkacheln und serverseitigem Clustering < 300 ms, Suche per Radius, Polygon, Bounding Box sowie Filter Land/Region/Stadt bei 1 Mio. Bildern aus dem Testbestand von epic-import-pipeline.
 
 ## Outcome
 
@@ -39,6 +39,6 @@ Die Gruppe findet ihre Bilder über Ort, Ordner und Karte, auch Bilder ohne GPS.
 
 ## Notes
 
-- Waits on epic-import-pipeline because: GPS und Ordnerpfad je Bild in der DB.
-- Waits on epic-raster-suche because: Raster, Filtermechanik und 1-Mio.-Testbestand, die Ort-Navigation und Geo-Filter erweitern.
+- Waits on epic-import-pipeline because: GPS und Ordnerpfad je Bild in der DB und der 1-Mio.-Testbestand.
+- Waits on epic-raster-suche because: Raster und Filtermechanik, die Ort-Navigation und Geo-Filter erweitern.
 - Waits on epic-datensicherheit-betrieb because: Admin-Oberfläche, in die die Prüfliste-Ansicht kommt.
