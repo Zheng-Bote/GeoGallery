@@ -2,7 +2,7 @@
 type: epic
 title: "Bilder sind nach Ort und Ordner navigierbar und auf der Karte"
 parent: initiative-geogallery
-covers: ["R17", "R18", "R19", "R20", "R22", "R23"]
+covers: ["R17", "R18", "R19", "R20", "R22", "R23", "R32"]
 sources: []
 companions: []
 after: []
@@ -35,7 +35,7 @@ Die Gruppe findet ihre Bilder über Ort, Ordner und Karte, auch Bilder ohne GPS.
 
 ## References
 
-- parent — _bmad-output/initiative-geogallery/initiative-geogallery.md, section Requirements (R17, R18, R19, R20, R22, R23), Constraints, Notes
+- parent — _bmad-output/initiative-geogallery/initiative-geogallery.md, section Requirements (R17, R18, R19, R20, R22, R23, R32), Constraints, Notes
 
 ## Notes
 

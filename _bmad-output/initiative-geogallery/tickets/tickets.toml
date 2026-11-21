@@ -36,7 +36,7 @@ id = 5
 slug = "epic-ort-karte"
 title = "Bilder sind nach Ort und Ordner navigierbar und auf der Karte"
 description = "GPS wird über die Fallback-Kette der Online-Anbieter reverse-geocodiert (asynchron, für den Bestand über Tage), Bilder ohne GPS bekommen den Ort aus dem Ordner oder landen unter 'Ort fehlt', Abweichungen auf der Prüfliste mit Admin-Ansicht; Navigation nach Ort und Ordnerbaum, Karte mit Kartenkacheln und serverseitigem Clustering < 300 ms, Suche per Radius, Polygon, Bounding Box sowie Filter Land/Region/Stadt bei 1 Mio. Bildern aus dem Testbestand von epic-raster-suche."
-covers = ["R17", "R18", "R19", "R20", "R22", "R23"]
+covers = ["R17", "R18", "R19", "R20", "R22", "R23", "R32"]
 after = [{ epic = 2, needs = "GPS und Ordnerpfad je Bild in der DB" }, { epic = 4, needs = "Raster, Filtermechanik und 1-Mio.-Testbestand, die Ort-Navigation und Geo-Filter erweitern" }, { epic = 3, needs = "Admin-Oberfläche, in die die Prüfliste-Ansicht kommt" }]
 
 [[epic]]
