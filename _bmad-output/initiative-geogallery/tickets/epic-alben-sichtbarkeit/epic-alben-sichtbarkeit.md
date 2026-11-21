@@ -37,6 +37,6 @@ Jedes Mitglied steuert über Alben, wer seine Bilder sieht, und niemand sieht me
 
 ## Notes
 
-- Waits on epic-import-pipeline because: zentraler Sichtbarkeitsfilter, den dieses Epic um Alben erweitert.
-- Waits on epic-raster-suche because: Raster und Auswahl, aus denen Alben befüllt werden, und 1-Mio.-Testbestand.
+- Waits on epic-import-pipeline because: zentraler Sichtbarkeitsfilter, den dieses Epic um Alben erweitert, und der 1-Mio.-Testbestand.
+- Waits on epic-raster-suche because: Raster und Auswahl, aus denen Alben befüllt werden.
 - Waits on epic-ort-karte because: Abfragepfade von Karte und Ort-Navigation, die mit dem erweiterten Filter ihre Ziele halten.

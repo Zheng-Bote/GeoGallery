@@ -14,7 +14,7 @@ risk: high
 
 ## Description
 
-Raster mit Lazy Loading und Infinite Scroll, Detailansicht mit allen Metadaten, Volltextsuche und Filter nach Kamera, Objektiv, Jahr, Monat, Autor, Bewertung, Tags und Zeit unsicher erreichen bei 1 Mio. Bildern (synthetischer Testbestand, von diesem Epic erzeugt und an epic-ort-karte übergeben) ihre Ziele: Raster < 150 ms p95, Suche/Filter < 200 ms p95, API-Metadaten < 100 ms p95, auch während eines Imports, gemessen durch den Sichtbarkeitsfilter von epic-import-pipeline; der Testbestand trägt eine Verteilung von Sichtbarkeit, Gruppen und GPS.
+Raster mit Lazy Loading und Infinite Scroll, Detailansicht mit allen Metadaten, Volltextsuche und Filter nach Kamera, Objektiv, Jahr, Monat, Autor, Bewertung, Tags und Zeit unsicher erreichen bei 1 Mio. Bildern (synthetischer Testbestand aus epic-import-pipeline) ihre Ziele: Raster < 150 ms p95, Suche/Filter < 200 ms p95, API-Metadaten < 100 ms p95, auch während eines Imports, gemessen durch den Sichtbarkeitsfilter von epic-import-pipeline.
 
 ## Outcome
 

@@ -11,7 +11,7 @@ covers = ["R1", "R2", "R3", "R25"]
 id = 2
 slug = "epic-import-pipeline"
 title = "Bilder kommen per Upload und Import ins Archiv"
-description = "Web-Upload (10 gleichzeitig) und Admin-SCP/SFTP (Server auf dem Host konfiguriert dieses Epic) landen in /storage/uploads; der Import verschiebt und benennt unveränderlich nach /storage/originals, parkt SHA256-Duplikate mit Anzeige für Admin/Owner, und die Job-Queue in PostgreSQL legt Metadaten in der DB ab (inkl. Bewertung, Keywords, Autor, Kennzeichen Zeit unsicher) und erzeugt AVIF und Thumbnails mit Copyright nach R31, statisch über H2O ausgeliefert, mit ≥ 10.000 Bildern/h auf Testdaten. Keywords werden zu Tags. Dieses Epic legt den zentralen Sichtbarkeitsfilter (Default alle angemeldeten, Gruppen aus epic-plattform-zugang, privat) pro Bild an, durch den jede spätere Abfrage läuft."
+description = "Web-Upload (10 gleichzeitig) und Admin-SCP/SFTP (Server auf dem Host konfiguriert dieses Epic) landen in /storage/uploads; der Import verschiebt und benennt unveränderlich nach /storage/originals, parkt SHA256-Duplikate mit Anzeige für Admin/Owner, und die Job-Queue in PostgreSQL legt Metadaten in der DB ab (inkl. Bewertung, Keywords, Autor, Kennzeichen Zeit unsicher) und erzeugt AVIF und Thumbnails mit Copyright nach R31, statisch über H2O ausgeliefert, mit ≥ 10.000 Bildern/h auf Testdaten. Keywords werden zu Tags. Dieses Epic legt den zentralen Sichtbarkeitsfilter (Default alle angemeldeten, Gruppen aus epic-plattform-zugang, privat) pro Bild an, durch den jede spätere Abfrage läuft. Dieses Epic baut den gemeinsamen 1-Mio.-Testbestand-Generator (fester Seed, Bilder nur über den Importpfad des catalog, mit Verteilung von GPS-Clustern, ~15 % ohne GPS, Albengrößen und Sichtbarkeiten inkl. Gruppen, privat und ausgeschlossen; spine AD-21) und misst mit ihm die Zahlen der Hardware-Profile (spine AD-22)."
 covers = ["R4", "R6", "R9", "R10", "R11", "R12", "R13", "R14", "R16", "R27", "R31"]
 after = [{ epic = 1, needs = "Konten und Anmeldung für Web-Upload und Upload-Verzeichnis pro Nutzer; Plattform-Baseline (systemd, UDS, DB, H2O, Deployment)" }]
 
@@ -19,7 +19,7 @@ after = [{ epic = 1, needs = "Konten und Anmeldung für Web-Upload und Upload-Ve
 id = 4
 slug = "epic-raster-suche"
 title = "Angemeldete finden Bilder in Raster, Detail und Suche"
-description = "Raster mit Lazy Loading und Infinite Scroll, Detailansicht mit allen Metadaten, Volltextsuche und Filter nach Kamera, Objektiv, Jahr, Monat, Autor, Bewertung, Tags und Zeit unsicher erreichen bei 1 Mio. Bildern (synthetischer Testbestand, von diesem Epic erzeugt und an epic-ort-karte übergeben) ihre Ziele: Raster < 150 ms p95, Suche/Filter < 200 ms p95, API-Metadaten < 100 ms p95, auch während eines Imports, gemessen durch den Sichtbarkeitsfilter von epic-import-pipeline; der Testbestand trägt eine Verteilung von Sichtbarkeit, Gruppen und GPS."
+description = "Raster mit Lazy Loading und Infinite Scroll, Detailansicht mit allen Metadaten, Volltextsuche und Filter nach Kamera, Objektiv, Jahr, Monat, Autor, Bewertung, Tags und Zeit unsicher erreichen bei 1 Mio. Bildern (synthetischer Testbestand aus epic-import-pipeline) ihre Ziele: Raster < 150 ms p95, Suche/Filter < 200 ms p95, API-Metadaten < 100 ms p95, auch während eines Imports, gemessen durch den Sichtbarkeitsfilter von epic-import-pipeline."
 covers = ["R14", "R21", "R22", "R27"]
 after = [{ epic = 2, needs = "Bilder mit Metadaten, Thumbnails und AVIF in DB und Ablage" }]
 
@@ -35,9 +35,9 @@ after = [{ epic = 2, needs = "Ablage /storage/originals, Job-Queue, Worker und I
 id = 5
 slug = "epic-ort-karte"
 title = "Bilder sind nach Ort und Ordner navigierbar und auf der Karte"
-description = "GPS wird über die Fallback-Kette der Online-Anbieter reverse-geocodiert (asynchron, für den Bestand über Tage), Bilder ohne GPS bekommen den Ort aus dem Ordner oder landen unter 'Ort fehlt', Abweichungen auf der Prüfliste mit Admin-Ansicht; Navigation nach Ort und Ordnerbaum, Karte mit Kartenkacheln und serverseitigem Clustering < 300 ms, Suche per Radius, Polygon, Bounding Box sowie Filter Land/Region/Stadt bei 1 Mio. Bildern aus dem Testbestand von epic-raster-suche."
-covers = ["R17", "R18", "R19", "R20", "R22", "R23"]
-after = [{ epic = 2, needs = "GPS und Ordnerpfad je Bild in der DB" }, { epic = 4, needs = "Raster, Filtermechanik und 1-Mio.-Testbestand, die Ort-Navigation und Geo-Filter erweitern" }, { epic = 3, needs = "Admin-Oberfläche, in die die Prüfliste-Ansicht kommt" }]
+description = "GPS wird über die Fallback-Kette der Online-Anbieter reverse-geocodiert (asynchron, für den Bestand über Tage), Bilder ohne GPS bekommen den Ort aus dem Ordner oder landen unter 'Ort fehlt', Abweichungen auf der Prüfliste mit Admin-Ansicht; Navigation nach Ort und Ordnerbaum, Karte mit Kartenkacheln und serverseitigem Clustering < 300 ms, Suche per Radius, Polygon, Bounding Box sowie Filter Land/Region/Stadt bei 1 Mio. Bildern aus dem Testbestand von epic-import-pipeline."
+covers = ["R17", "R18", "R19", "R20", "R22", "R23", "R32"]
+after = [{ epic = 2, needs = "GPS und Ordnerpfad je Bild in der DB und der 1-Mio.-Testbestand" }, { epic = 4, needs = "Raster und Filtermechanik, die Ort-Navigation und Geo-Filter erweitern" }, { epic = 3, needs = "Admin-Oberfläche, in die die Prüfliste-Ansicht kommt" }]
 
 [[epic]]
 id = 6
@@ -45,7 +45,7 @@ slug = "epic-alben-sichtbarkeit"
 title = "Alben und Sichtbarkeit bestimmen, wer was sieht"
 description = "Nutzer legen Alben bewusst an und befüllen sie aus dem Raster; Sichtbarkeit pro Album wird vererbt und restriktivste gewinnt, indem dieses Epic den Sichtbarkeitsfilter von epic-import-pipeline um Alben erweitert; Owner und Admin setzen Sichtbarkeit nach R29 in der Oberfläche; die Leistungsziele halten weiter bei 1 Mio. Bildern."
 covers = ["R4", "R28", "R29"]
-after = [{ epic = 2, needs = "zentraler Sichtbarkeitsfilter, den dieses Epic um Alben erweitert" }, { epic = 4, needs = "Raster und Auswahl, aus denen Alben befüllt werden, und 1-Mio.-Testbestand" }, { epic = 5, needs = "Abfragepfade von Karte und Ort-Navigation, die mit dem erweiterten Filter ihre Ziele halten" }]
+after = [{ epic = 2, needs = "zentraler Sichtbarkeitsfilter, den dieses Epic um Alben erweitert, und der 1-Mio.-Testbestand" }, { epic = 4, needs = "Raster und Auswahl, aus denen Alben befüllt werden" }, { epic = 5, needs = "Abfragepfade von Karte und Ort-Navigation, die mit dem erweiterten Filter ihre Ziele halten" }]
 
 [[epic]]
 id = 7
