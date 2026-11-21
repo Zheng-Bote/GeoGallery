@@ -42,4 +42,4 @@ Jedes Mitglied bringt Bilder per Web, der Admin per SCP/SFTP ins Archiv, und jed
 
 ## Notes
 
-- Waits on epic-plattform-zugang because: Konten und Anmeldung für Web-Upload und Upload-Verzeichnis pro Nutzer; Plattform-Baseline (systemd, UDS, DB, H2O, Deployment).
+- Waits on epic-plattform-zugang because: Konten und Anmeldung für Web-Upload und Upload-Verzeichnis pro Nutzer; Plattform-Baseline (Podman-Container, systemd-Units, UDS, service-core, DB, H2O, CI und Deployment).
