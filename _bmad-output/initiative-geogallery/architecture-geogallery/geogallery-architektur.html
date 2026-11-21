@@ -1,0 +1,463 @@
+<title>GeoGallery Architektur</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: eine Lesespalte wie ein Kartenblatt mit Legende; Abschnitte als Kartenausschnitte, Höhenlinien als einziges Ornament */
+:root{
+  --paper:#f2f4f0; --sheet:#ffffff; --ink:#1b2a30; --muted:#566a70; --line:#d3dcd6;
+  --survey:#22667f; --survey-soft:#dceaf0; --ochre:#9a7414; --ochre-soft:#f4ead0;
+  --ok:#2d7a46; --ok-soft:#dcefe2; --no:#a33b2b; --no-soft:#f6e0dc;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101a1e; --sheet:#16242a; --ink:#e3ece9; --muted:#9db0b3; --line:#2b3f46;
+  --survey:#6fb5cf; --survey-soft:#1d3a46; --ochre:#d9b04a; --ochre-soft:#3a3115;
+  --ok:#6cc28a; --ok-soft:#1b3726; --no:#e58b7c; --no-soft:#41221d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#101a1e; --sheet:#16242a; --ink:#e3ece9; --muted:#9db0b3; --line:#2b3f46;
+  --survey:#6fb5cf; --survey-soft:#1d3a46; --ochre:#d9b04a; --ochre-soft:#3a3115;
+  --ok:#6cc28a; --ok-soft:#1b3726; --no:#e58b7c; --no-soft:#41221d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--f-body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 4rem}
+header.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line);margin-top:calc(-1 * env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 3rem);padding-bottom:2.5rem;background:var(--sheet)}
+header.hero svg.contours{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.55}
+header.hero .wrap{position:relative;padding-block:0}
+.eyebrow{font:600 .75rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--survey)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);font-weight:800;margin:.6rem 0 1rem;letter-spacing:-.01em}
+h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem}
+h3{font-size:1.1rem;font-weight:700}
+p{max-width:68ch;margin:.0 0 1rem}
+.lede{font-size:1.12rem;color:var(--muted);max-width:62ch}
+.facts{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-top:1.6rem;font:500 .9rem/1.3 var(--f-mono)}
+.facts span b{font-family:var(--f-display);font-size:1.35rem;color:var(--ink);display:block}
+.facts span{color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:.4rem;margin:1.6rem 0 0}
+nav.toc a{font:500 .82rem/1 var(--f-mono);color:var(--survey);text-decoration:none;border:1px solid var(--line);padding:.45rem .65rem;border-radius:4px;background:var(--paper)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--survey);outline:none}
+section{padding-top:3rem}
+.grid-ref{font:600 .72rem/1 var(--f-mono);color:var(--ochre);letter-spacing:.08em;margin-bottom:.4rem;display:block}
+.diagram{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:1rem;overflow-x:auto;margin:1rem 0}
+.diagram pre.mermaid{margin:0;background:transparent;display:flex;justify-content:center;min-width:560px}
+.tablebox{overflow-x:auto;margin:1rem 0;border:1px solid var(--line);border-radius:6px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .74rem/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--paper)}
+tr:last-child td{border-bottom:0}
+td code,p code,li code{font:.86em var(--f-mono);background:var(--survey-soft);padding:.08em .35em;border-radius:3px}
+.mono{font-family:var(--f-mono)}
+ul.tight{padding-left:1.2rem;margin:.4rem 0 1rem;max-width:68ch}
+ul.tight li{margin:.25rem 0}
+.callout{border-left:3px solid var(--ochre);background:var(--ochre-soft);padding:.8rem 1rem;border-radius:0 6px 6px 0;margin:1rem 0;max-width:72ch}
+/* Rechner */
+.calc{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1.2rem;background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:1.2rem;margin-top:1rem}
+@media (max-width:760px){.calc{grid-template-columns:minmax(0,1fr)}}
+.calc fieldset{border:0;padding:0;margin:0 0 1rem}
+.calc legend{font:600 .74rem/1 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem}
+.calc label{font-size:.92rem}
+select,input[type=checkbox]{accent-color:var(--survey)}
+select{font:inherit;font-size:.9rem;padding:.35rem .5rem;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);max-width:100%}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--survey);outline-offset:2px}
+.album{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.3rem .7rem;align-items:center;padding:.6rem 0;border-top:1px dashed var(--line)}
+.album .row{display:flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center}
+.album .name{font-weight:600}
+.verdict{display:flex;flex-direction:column;gap:.5rem}
+.who{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:5px;border:1px solid var(--line);font-size:.92rem}
+.pill{font:600 .74rem/1 var(--f-mono);padding:.3rem .5rem;border-radius:999px;white-space:nowrap}
+.yes{background:var(--ok-soft);color:var(--ok)}
+.no{background:var(--no-soft);color:var(--no)}
+.eff{font:600 .9rem/1.4 var(--f-mono);color:var(--survey);margin:.2rem 0 .6rem}
+.why{font-size:.85rem;color:var(--muted);margin-top:.4rem}
+/* AD-Verzeichnis */
+.filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+.chip{font:500 .8rem/1 var(--f-mono);border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:.45rem .65rem;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--survey);border-color:var(--survey);color:var(--sheet)}
+#q{font:inherit;font-size:.95rem;padding:.5rem .7rem;border:1px solid var(--line);border-radius:4px;background:var(--sheet);color:var(--ink);width:100%;max-width:420px}
+.adlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:.7rem;margin-top:1rem}
+.ad{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:.8rem .9rem;min-width:0}
+.ad .id{font:600 .76rem/1 var(--f-mono);color:var(--ochre)}
+.ad h3{font-size:.98rem;margin:.35rem 0 .3rem}
+.ad p{font-size:.88rem;color:var(--muted);margin:0}
+.ad .tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem}
+.ad .tags span{font:.7rem/1 var(--f-mono);color:var(--survey);background:var(--survey-soft);padding:.25rem .4rem;border-radius:3px}
+.count{font:.82rem var(--f-mono);color:var(--muted)}
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="hero">
+  <svg class="contours" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="var(--line)" stroke-width="1.2">
+      <path d="M820 40c120 10 260 60 300 150s-60 180-200 190-260-40-300-120 80-230 200-220z"/>
+      <path d="M840 80c90 8 200 50 230 120s-50 140-160 148-200-30-230-95 70-180 160-173z"/>
+      <path d="M860 125c60 5 135 33 155 82s-35 95-108 100-135-20-155-64 48-123 108-118z"/>
+      <path d="M885 165c32 3 72 18 82 44s-18 50-57 53-72-11-82-34 25-66 57-63z"/>
+      <path d="M-40 330c140-40 320-30 460 10s250 60 380 40"/>
+      <path d="M-40 370c160-30 340-20 480 15s260 45 400 30"/>
+    </g>
+    <circle cx="912" cy="208" r="5" fill="var(--ochre)"/>
+  </svg>
+  <div class="wrap">
+    <span class="eyebrow">Architektur-Spine · Initiative · Stand 21.11.2026</span>
+    <h1>GeoGallery Architektur</h1>
+    <p class="lede">Wie die acht Epics unabhängig voneinander gebaut werden und trotzdem zusammenpassen: wer welche Daten besitzt, wer wen aufrufen darf und warum ein privates Bild nie öffentlich wird.</p>
+    <div class="facts">
+      <span><b>1 Mio.</b>Bilder als Zielbestand</span>
+      <span><b>7 + 1</b>Services + Backup-Adapter</span>
+      <span><b>3</b>Podman-Container</span>
+      <span><b>51</b>Architekturentscheidungen</span>
+    </div>
+    <nav class="toc" aria-label="Inhalt">
+      <a href="#ueberblick">Überblick</a><a href="#graph">Wer ruft wen</a><a href="#weg">Weg eines Bildes</a><a href="#sicht">Sichtbarkeit</a><a href="#oeffentlich">Öffentlich</a><a href="#profile">Hardware</a><a href="#ads">Alle Entscheidungen</a><a href="#abweichungen">Abweichungen</a><a href="#stack">Stack</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="ueberblick">
+  <span class="grid-ref">A1 · ÜBERBLICK</span>
+  <h2>Ein Host, drei Container, klare Besitzer</h2>
+  <p>GeoGallery läuft auf einem Linux-Host. H2O nimmt alle Anfragen an, die Drogon-API übersetzt sie, und dahinter arbeiten fachliche Services, die jeweils ihre eigenen Daten besitzen. Alle Services liegen in einem Container, in dem systemd jede Komponente als eigene Unit mit eigenem Unix-User startet.</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Host["Linux-Host · Podman + Quadlet"]
+    sftp["OpenSSH SFTP"]
+    subgraph H2O["Container h2o"]
+      edge["H2O · TLS 1.3 · Signaturprüfung"]
+    end
+    subgraph GG["Container geogallery · systemd"]
+      api; iam; catalog; ingest; media; geocoder; webauthn; ba["backup-adapter"]
+    end
+    subgraph PG["Container postgresql"]
+      db[("PostgreSQL 18 · PostGIS · PGroonga")]
+    end
+    vol[("/storage")]
+  end
+  edge --> api
+  edge -. liest Ableitungen .-> vol
+  sftp -. schreibt Uploads .-> vol
+  GG --> vol
+  GG --> db
+  ba -.-> ziel[["Backup-Ziel je Hosting"]]
+  </pre></div>
+</section>
+
+<section id="graph">
+  <span class="grid-ref">B2 · AUFRUFE UND DATENBESITZ</span>
+  <h2>Wer wen aufrufen darf</h2>
+  <p>Jeder Pfeil ist erlaubt, alles andere nicht. Das setzen zwei Mechanismen durch: Dateirechte auf den Sockets und eine Methoden-Allowlist, die der aufgerufene Service anhand des Unix-Users des Aufrufers prüft. Nur die API darf einen Nutzer (Principal) mitschicken.</p>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  B[Browser / Desktop] --> h2o --> api
+  api --> iam --> webauthn
+  api --> catalog
+  api --> ingest
+  ingest -->|Reserve · Confirm| catalog
+  catalog -->|Outbox| ingest
+  catalog -->|Outbox| media
+  catalog -->|Outbox| geocoder
+  media -->|ReportDerivatives| catalog
+  geocoder -->|ReportLocation| catalog
+  ba[backup-adapter] -->|ReportBackup| catalog
+  </pre></div>
+  <div class="tablebox"><table>
+    <thead><tr><th>Service</th><th>Besitzt</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">api</td><td>keine Fachdaten; Audit-Log</td></tr>
+      <tr><td class="mono">iam</td><td>Konten, Rollen, Gruppen, Passkeys, TOTP, Sessions</td></tr>
+      <tr><td class="mono">catalog</td><td>Bilder, Metadaten, Orte, Ordner, Alben, Tags, Sichtbarkeit, öffentliche Projektion, Papierkorb</td></tr>
+      <tr><td class="mono">ingest</td><td>Uploads, Import-Jobs, geparkte Duplikate, Metadaten-Extraktion</td></tr>
+      <tr><td class="mono">media</td><td>Ableitungen (AVIF, Vorschaubilder)</td></tr>
+      <tr><td class="mono">geocoder</td><td>Geocoding-Jobs, Cache, Provider-Konfiguration mit verschlüsselten API-Keys, Kontingentzähler</td></tr>
+      <tr><td class="mono">webauthn</td><td>nichts; prüft Passkeys zustandslos (Rust)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Jeder Service hat sein eigenes Schema in PostgreSQL und schreibt nur dort. Fremde Daten liest er höchstens über veröffentlichte Views, oder er fragt per gRPC.</p>
+</section>
+
+<section id="weg">
+  <span class="grid-ref">C3 · IMPORT</span>
+  <h2>Der Weg eines Bildes</h2>
+  <p>Nur der Katalog legt Bilder an. ingest reserviert zuerst den SHA256, und erst wenn der Katalog zustimmt, wird die Datei verschoben. So entstehen auch bei parallelen Workern keine Duplikate. Aufträge an media und geocoder schreibt der Katalog in derselben Transaktion in seine Outbox. Dadurch geht kein Auftrag verloren.</p>
+  <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant U as uploads/
+  participant I as ingest
+  participant C as catalog
+  participant M as media
+  participant G as geocoder
+  U->>I: Datei fertig (.part umbenannt)
+  I->>I: SHA256, Metadaten (Exiv2)
+  I->>C: Reserve(sha256, job)
+  alt bereits vorhanden
+    C-->>I: DUPLICATE → parken
+  else neu
+    C-->>I: ACCEPTED
+    I->>I: nach originals/ verschieben (RENAME_NOREPLACE)
+    I->>C: Confirm(pfad, Rohmetadaten)
+    C->>M: Outbox: Ableitungen erzeugen
+    C->>G: Outbox: Ort bestimmen
+    M-->>C: ReportDerivatives(rev)
+    G-->>C: ReportLocation(rev)
+  end
+  </pre></div>
+</section>
+
+<section id="sicht">
+  <span class="grid-ref">D4 · SICHTBARKEIT</span>
+  <h2>Wer ein Bild sieht</h2>
+  <p>Die Regel steht genau einmal im Katalog und wird dort per Row-Level Security durchgesetzt. Fehlt der Principal, liefert eine Abfrage gar nichts. Probier die Regel mit dem Rechner aus.</p>
+  <ul class="tight">
+    <li>Jedes Bild ist mindestens für alle Angemeldeten sichtbar. Alben können nur erweitern, nie einengen.</li>
+    <li>Einengen kann nur der Owner, und zwar mit einer eigenen Obergrenze am Bild.</li>
+    <li>Ein fremdes Album macht ein Bild nur öffentlich, wenn der Owner die Obergrenze selbst auf „öffentlich“ gesetzt hat.</li>
+    <li>Ein Ausschluss gilt nur für das öffentliche Album, in dem er gesetzt ist. „Zurücknehmen“ senkt die Obergrenze dauerhaft.</li>
+    <li>Admins verwalten nicht-private fremde Inhalte, sehen Privates aber nie. Im Papierkorb sieht niemand das Bild.</li>
+  </ul>
+
+  <div class="calc" id="calc">
+    <div>
+      <fieldset>
+        <legend>Bild</legend>
+        <label for="cap">Eigene Obergrenze des Owners</label><br>
+        <select id="cap">
+          <option value="unset">keine eigene Grenze (Standard)</option>
+          <option value="private">privat</option>
+          <option value="groups">nur Gruppe „Familie“</option>
+          <option value="authenticated">alle Angemeldeten</option>
+          <option value="public">öffentlich erlaubt</option>
+        </select>
+        <div style="margin-top:.6rem"><label><input type="checkbox" id="trash"> im Papierkorb</label></div>
+      </fieldset>
+      <fieldset>
+        <legend>Alben, in denen das Bild liegt</legend>
+        <div class="album">
+          <input type="checkbox" id="a1" checked aria-label="Album Urlaub 2024 enthält das Bild">
+          <div><span class="name">Urlaub 2024</span> <span class="count">(eigenes Album)</span>
+            <div class="row"><select id="a1v" aria-label="Sichtbarkeit Urlaub 2024"><option value="authenticated">alle Angemeldeten</option><option value="groups">Gruppe „Familie“</option><option value="private">privat</option><option value="public" selected>öffentlich</option></select>
+            <label><input type="checkbox" id="a1x"> ausgeschlossen</label></div></div>
+        </div>
+        <div class="album">
+          <input type="checkbox" id="a2" aria-label="Album Vereinsfest enthält das Bild">
+          <div><span class="name">Vereinsfest</span> <span class="count">(Album eines anderen Nutzers)</span>
+            <div class="row"><select id="a2v" aria-label="Sichtbarkeit Vereinsfest"><option value="authenticated">alle Angemeldeten</option><option value="groups">Gruppe „Familie“</option><option value="private">privat</option><option value="public" selected>öffentlich</option></select>
+            <label><input type="checkbox" id="a2x"> ausgeschlossen</label></div></div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="verdict" aria-live="polite">
+      <div class="eff" id="eff"></div>
+      <div class="who"><span>Besucher ohne Konto</span><span class="pill" id="w-anon"></span></div>
+      <div class="who"><span>Alle Angemeldeten</span><span class="pill" id="w-auth"></span></div>
+      <div class="who"><span>Mitglied der Gruppe „Familie“</span><span class="pill" id="w-grp"></span></div>
+      <div class="who"><span>Owner</span><span class="pill" id="w-own"></span></div>
+      <div class="who"><span>Admin (Verwaltung)</span><span class="pill" id="w-adm"></span></div>
+      <p class="why" id="why"></p>
+    </div>
+  </div>
+</section>
+
+<section id="oeffentlich">
+  <span class="grid-ref">E5 · ÖFFENTLICHE GALERIE</span>
+  <h2>Öffentlich ist eine eigene Projektion</h2>
+  <p>Besucher ohne Konto fragen nie die Bildzeilen selbst ab, sondern eine Projektion, die der Katalog je Bild vorberechnet. Sie enthält nur Felder der Positivliste und GPS nach der Albumregel. Karte, Suche, Filter, Sortierung und Zähler laufen für Anonyme nur über diese Projektion. So kann auch eine geschickte Radiussuche keinen versteckten Ort verraten.</p>
+  <ul class="tight">
+    <li><b>Bilder</b> kommen nur über signierte URLs mit Ablaufzeit. H2O prüft die Signatur selbst, ohne Rückfrage beim Backend.</li>
+    <li><b>Entzug wirkt sofort:</b> Papierkorb, Zurücknehmen und Löschen geben der Ableitung eine neue Revision, und alte URLs liefern 404.</li>
+    <li><b>Ableitungen</b> tragen keine Metadaten außer dem Copyright. Das Copyright ist immer öffentlich und wird beim Veröffentlichen angezeigt.</li>
+    <li><b>Restore:</b> Ein Privacy-Ledger stellt sicher, dass nach einem Restore nichts Zurückgenommenes wieder öffentlich wird.</li>
+  </ul>
+</section>
+
+<section id="profile">
+  <span class="grid-ref">F6 · HARDWARE-PROFILE</span>
+  <h2>Gleiche Architektur, verschiedene Hosts</h2>
+  <p>Die Profile unterscheiden sich nur in der Konfiguration, nie im Code. M ist die Referenz für „Done when“, S ist der realistische Einstieg. Die Zahlen sind Schätzungen, bis der Benchmark im Import-Epic sie bestätigt.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Profil</th><th>Hardware</th><th>Lesepfad bei 1 Mio.</th><th>Import</th><th>Einschränkung</th></tr></thead>
+    <tbody>
+      <tr><td><b>M</b> Referenz</td><td>8C/16T, 32 GB, NVMe ≥ 1 TB, Originale ≥ 8 TB gespiegelt</td><td>alle Ziele, auch während Import</td><td class="mono">≥ 10.000/h</td><td>–</td></tr>
+      <tr><td><b>S</b> Einstieg</td><td>4 Kerne, 8 GB</td><td>Ziele ohne laufenden Import plausibel</td><td class="mono">~3.000–4.000/h</td><td>Erstimport 200.000 ≈ 2–3 Tage; während Import können p95-Ziele reißen</td></tr>
+      <tr><td><b>XS</b></td><td>4 Kerne, 4 GB</td><td>nur bis ~200–300 Tsd. Bilder</td><td class="mono">~2.000–3.000/h</td><td>Swap-Gefahr bei großen HEIC/TIFF; für 1 Mio. nicht empfohlen</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="ads">
+  <span class="grid-ref">G7 · VERZEICHNIS</span>
+  <h2>Alle Entscheidungen</h2>
+  <p>Jede Entscheidung bindet bestimmte Epics. Filtere nach deinem Epic, um zu sehen, was für dich gilt. Den vollständigen Wortlaut mit Binds, Prevents und Rule enthält die Spine-Datei.</p>
+  <label for="q" class="count">Suche</label><br>
+  <input id="q" type="search" placeholder="z. B. Cursor, Outbox, Papierkorb">
+  <div class="filters" id="filters" role="group" aria-label="Nach Epic filtern"></div>
+  <div class="count" id="adcount"></div>
+  <div class="adlist" id="adlist"></div>
+</section>
+
+<section id="abweichungen">
+  <span class="grid-ref">H8 · FÜR DAS INITIATIVE-TICKET</span>
+  <h2>Abweichungen vom Initiative-Ticket</h2>
+  <p>An diesen Stellen weicht die Architektur bewusst vom Ticket ab. Das Ticket sollte nachgezogen werden, damit beide nicht auseinanderlaufen.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Thema</th><th>Ticket</th><th>Architektur</th></tr></thead>
+    <tbody>
+      <tr><td>Datenbank</td><td>PostgreSQL 19</td><td>Start mit PostgreSQL 18; Upgrade ist Betriebssache (AD-37)</td></tr>
+      <tr><td>Laufzeit</td><td>Komponenten als systemd-Units</td><td>Podman: h2o, geogallery (systemd innen), postgresql (AD-25)</td></tr>
+      <tr><td>FlatBuffers</td><td>verworfen</td><td>zwischen API und Frontend erwünscht, intern weiterhin nicht (AD-30)</td></tr>
+      <tr><td>Sichtbarkeit</td><td>R4/R5 „restriktivste gewinnt“</td><td>Obergrenze + Basis, Alben erweitern nur, Zurücknehmen senkt Obergrenze (AD-18, AD-19)</td></tr>
+      <tr><td>Leistungsziele</td><td>auf dem Zielhost</td><td>je Hardware-Profil; S mit niedrigeren Zielen (AD-22)</td></tr>
+      <tr><td>Restore ≤ 24 h</td><td>vollständig</td><td>DB + Originale + Ledger; Ableitungen laufen nach (AD-27)</td></tr>
+      <tr><td>Stack</td><td>libavif, nur C++</td><td>AVIF über libvips/libheif; Rust für WebAuthn; PGroonga, libsodium (AD-24, AD-32, AD-36)</td></tr>
+      <tr><td>Copyright</td><td>Positivliste für alle Felder</td><td>Copyright der Ableitung ist immer öffentlich (AD-40)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="stack">
+  <span class="grid-ref">I9 · STACK</span>
+  <h2>Stack</h2>
+  <p>Am 21.11.2026 gegen das Web geprüft. Der Code übernimmt die Versionen, sobald er existiert.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Komponente</th><th>Version</th></tr></thead>
+    <tbody>
+      <tr><td>C++ · Conan 2 · CMake</td><td class="mono">C++23</td></tr>
+      <tr><td>Drogon</td><td class="mono">1.9.14</td></tr>
+      <tr><td>gRPC C++ (mit libsystemd)</td><td class="mono">1.85.4</td></tr>
+      <tr><td>H2O (mruby)</td><td class="mono">master d3e43fcf</td></tr>
+      <tr><td>PostgreSQL · PostGIS · PGroonga</td><td class="mono">18 · 3.7.0 · 4.1.0</td></tr>
+      <tr><td>libvips · libheif · Exiv2</td><td class="mono">8.18.7 · ≥ 1.23 · ≥ 0.28.9</td></tr>
+      <tr><td>libsodium (XChaCha20-Poly1305)</td><td class="mono">1.0.22</td></tr>
+      <tr><td>Rust · webauthn-rs</td><td class="mono">0.6.2</td></tr>
+      <tr><td>Angular · Spartan/UI</td><td class="mono">22 · produktiver Stand</td></tr>
+      <tr><td>Qt (Desktop-Client)</td><td class="mono">6.10+</td></tr>
+      <tr><td>FlatBuffers</td><td class="mono">25.9.23</td></tr>
+      <tr><td>Podman · Quadlet</td><td class="mono">6.2.0</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>Quelle: <span class="mono">_bmad-output/initiative-geogallery/architecture-geogallery/architecture-geogallery.md</span> (Spine) und <span class="mono">.memlog.md</span> (Herleitung).</footer>
+</main>
+
+<script>
+(function(){
+  const RANK={private:0,groups:1,authenticated:2,public:3};
+  const NAME={private:"privat",groups:"Gruppe „Familie“",authenticated:"alle Angemeldeten",public:"öffentlich"};
+  const $=id=>document.getElementById(id);
+  function min(a,b){return RANK[a]<=RANK[b]?a:b}
+  function max(a,b){return RANK[a]>=RANK[b]?a:b}
+  function compute(){
+    const cap=$("cap").value, trash=$("trash").checked;
+    const albums=[{on:$("a1").checked,v:$("a1v").value,x:$("a1x").checked,own:true,n:"Urlaub 2024"},
+                  {on:$("a2").checked,v:$("a2v").value,x:$("a2x").checked,own:false,n:"Vereinsfest"}];
+    let widest="authenticated"; const notes=[];
+    albums.filter(a=>a.on).forEach(a=>{
+      let c=a.v;
+      if(c==="public"&&a.x){c="authenticated";notes.push("„"+a.n+"“: Bild dort ausgeschlossen, also kein öffentlicher Weg.")}
+      if(!a.own&&cap==="unset"&&RANK[c]>RANK.authenticated){c="authenticated";notes.push("„"+a.n+"“ ist ein fremdes Album; ohne eigene Grenze ≥ öffentlich macht es das Bild nicht öffentlich.")}
+      if(RANK[a.v]<RANK.authenticated){notes.push("„"+a.n+"“ ist enger als die Basis und engt nicht ein.")}
+      widest=max(widest,c);
+    });
+    let eff=cap==="unset"?widest:min(cap,widest);
+    if(cap!=="unset"&&RANK[cap]<RANK[widest])notes.push("Die Obergrenze des Owners begrenzt auf „"+NAME[cap]+"“.");
+    const set=(id,ok)=>{const e=$(id);e.textContent=ok?"sieht es":"sieht es nicht";e.className="pill "+(ok?"yes":"no")};
+    if(trash){
+      $("eff").textContent="Effektiv: im Papierkorb, für niemanden sichtbar";
+      ["w-anon","w-auth","w-grp","w-own","w-adm"].forEach(i=>set(i,false));
+      $("why").textContent="Im Papierkorb ist ein Bild überall unsichtbar. Wiederherstellen geht über die eigene Papierkorbansicht.";
+      return;
+    }
+    $("eff").textContent="Effektiv: "+NAME[eff];
+    set("w-anon",eff==="public");
+    set("w-auth",RANK[eff]>=RANK.authenticated);
+    set("w-grp",RANK[eff]>=RANK.groups);
+    set("w-own",true);
+    set("w-adm",eff!=="private");
+    if(eff==="private")notes.push("Privat sieht nur der Owner, auch kein Admin.");
+    $("why").textContent=notes.join(" ")||"Basis ist „alle Angemeldeten“; das weiteste Album bestimmt, wie weit das Bild darüber hinaus geht.";
+  }
+  ["cap","trash","a1","a1v","a1x","a2","a2v","a2x"].forEach(id=>$(id).addEventListener("change",compute));
+  compute();
+
+  const E={plattform:"Plattform & Zugang",import:"Import-Pipeline",raster:"Raster & Suche",ort:"Ort & Karte",alben:"Alben & Sichtbarkeit",pflege:"Pflege",public:"Öffentliche Galerie",betrieb:"Datensicherheit & Betrieb"};
+  const ALL=Object.keys(E);
+  const AD=[
+   [1,"Service-Schnitt und Datenbesitz","Genau sieben Services plus Backup-Adapter, jeder mit festgelegtem Datenbesitz.",ALL],
+   [2,"Nur catalog schreibt Bilddaten","Import zweistufig über Reserve/Confirm; ingest ist der einzige Metadaten-Extraktor.",["import","pflege","ort","betrieb"]],
+   [3,"Ein Schema pro Service","Eigenes Schema, Owner-Rolle nur für Migrationen, Laufzeitrolle schreibt nur dort.",ALL],
+   [4,"UUIDv7","Alle grenzüberschreitenden IDs sind UUIDv7 aus PostgreSQL.",ALL],
+   [5,"Keine Fremdschlüssel über Schemas","Endgültiges Löschen propagiert catalog aktiv per Outbox.",["pflege","import","ort"]],
+   [6,"Metadaten, Orte, Tags in Ebenen","raw / override / effective; Ort override > geocoded > Ordner; Tags mit added/removed.",["import","pflege","ort","raster"]],
+   [7,"Aufnahmezeit als Ortszeit","EXIF-Ortszeit plus Offset und „Zeit unsicher“; Systemzeiten UTC.",["import","raster","pflege"]],
+   [8,"Principal nur von der API","Nur die API löst Sessions auf; Principal ist Pflichtfeld der Request-Message.",["plattform","alben","raster"]],
+   [9,"Socket-Dateirechte","Eigener Unix-User je Service; Socket nur für erlaubte Aufrufer.",ALL],
+   [10,"Rechteprüfung beim Datenbesitzer","RBAC und Besitzregeln prüft der Service, dem die Daten gehören.",["plattform","alben","pflege"]],
+   [11,"gRPC-Fehler und Deadlines","Standard-Statuscodes; nur die API übersetzt; Deadlines werden weitergereicht.",ALL],
+   [12,"Signierte, ablaufende URLs","HMAC über vollen Pfad, Revision und Ablauf; Entzug wechselt die Revision.",["import","raster","public","pflege"]],
+   [13,"Storage-Layout","Uploads, geparkt, Originale (einmal geschrieben), Ableitungen mit Revision.",["import","pflege","betrieb"]],
+   [14,"Eigene Job-Queue je Service","Nur der Besitzer schreibt seine Queue; Aufträge per gRPC.",["import","ort","betrieb"]],
+   [15,"At-least-once, idempotent","Outbox im catalog; getrennte Revisionen für Ableitung, Ort, Metadaten.",["import","ort","pflege","betrieb"]],
+   [16,"Einheitliche Job-Form","Gleiche Zustände und Felder in allen Queues als DB-Vertrag.",["import","ort","betrieb"]],
+   [17,"Import-Priorität im OS","ingest und media mit niedrigerer CPU- und IO-Gewichtung.",["import","betrieb"]],
+   [18,"Sichtbarkeitsregel","Basis „alle Angemeldeten“, Alben erweitern nur, Obergrenze des Owners engt ein.",["alben","public","pflege"]],
+   [19,"Fremde Bilder in Alben","Ein fremdes Album öffnet höchstens die Obergrenze des Owners.",["alben","public"]],
+   [20,"Filter einmal, per RLS","Materialisierte Publikumsspalten, Row-Level Security im catalog.",["import","alben","raster","ort","public"]],
+   [21,"Gemeinsamer Testbestand","Ein Generator, fester Seed, 1 Mio. Bilder über den echten Importpfad.",["import","raster","ort","betrieb"]],
+   [22,"Hardware-Profile","M Referenz, S Einstieg, XS Grenzfall; nur Konfiguration unterscheidet sie.",ALL],
+   [23,"Sprachneutrale Verträge","C++23, Rust oder Go, solange alle Verträge erfüllt sind.",ALL],
+   [24,"WebAuthn in Rust","Zustandslose Prüfung mit webauthn-rs; Credentials besitzt iam.",["plattform"]],
+   [25,"Drei Podman-Container","h2o, geogallery (systemd innen), postgresql; Updates je Service.",["plattform","betrieb"]],
+   [26,"Geheimnisse","Mit XChaCha20-Poly1305 verschlüsselte Datei; Schlüssel als Podman-Secret.",["plattform","betrieb"]],
+   [27,"Backup-Vertrag","Sicherungsstatus je Original, PITR, 90 Tage; Restore = DB + Originale + Ledger.",["betrieb"]],
+   [28,"Expand/Contract","Migrationen nur abwärtskompatibel.",ALL],
+   [29,"REST mit Envelope","/api/v1, einheitlicher JSON-Envelope, OpenAPI-Vertrag, einheitlich 404.",["plattform","raster","alben","pflege","public","ort"]],
+   [30,"FlatBuffers zum Frontend","Wahlweise binär oder JSON mit denselben Feldern; intern keine FlatBuffers.",["raster","ort","public"]],
+   [31,"Cursor-Pagination","Bildsammlungen nur per opakem Cursor, nie per OFFSET.",["raster","ort","public"]],
+   [32,"Suche über PGroonga","Ein Suchweg für alle Schriften; anonym nur über die öffentliche Suchspalte.",["raster","public"]],
+   [33,"Kartencluster per Quadkey","Vorberechneter Kachelschlüssel; anonym nur über öffentliche Koordinaten.",["ort","public"]],
+   [34,"Verträge im Haupt-Repo","contracts/ mit proto, fbs, openapi, jobs, permissions; Service-Repos binden per Tag.",ALL],
+   [35,"Audit in der API","Audit-Plugin in eigenem Schema, inhaltsfrei.",["plattform","betrieb"]],
+   [36,"Toolchain und Wiederverwendung","C++23, Snippet-Übernahmen, AVIF über libvips ohne Metadaten.",ALL],
+   [37,"PostgreSQL 18","Start auf PG 18 mit PostGIS 3.7 und PGroonga; Upgrade ist Betrieb.",ALL],
+   [38,"Methodenrechte per Peer-Credential","Allow-Liste je Methode; Principal nur vom Unix-User der API.",ALL],
+   [39,"RLS-Härtung","Drei Rollen, FORCE RLS, ohne Principal keine Zeilen, CI-Test.",["import","alben","raster","public"]],
+   [40,"Öffentliche Projektion","pub_fields, pub_point, pub_quadkey, pub_search; Copyright immer öffentlich.",["public","ort","raster"]],
+   [41,"Albumkontext","Albumabfragen filtern über Mitgliedschaft und Ausschluss.",["alben","public"]],
+   [42,"Neuberechnung der Sichtbarkeit","Aus Gesamtzustand, unter Zeilensperre; Einengungen synchron.",["alben","public","pflege"]],
+   [43,"Jeder Lesepfad hat ein Publikum","Zähler, Tags, Ordner, Cover nur aus sichtbaren Bildern.",["raster","ort","alben","public"]],
+   [44,"Betriebsdaten inhaltsfrei","Jobs, Outbox, Audit und Logs nur mit IDs und Codes.",["betrieb","import","ort"]],
+   [45,"Restore wahrt Einengungen","Privacy-Ledger wird nach Restore erneut angewendet.",["betrieb","public"]],
+   [46,"Upload-Herkunft","Owner aus Principal bzw. iam-Zuordnung; keine Symlinks oder Pfadtricks.",["import","plattform"]],
+   [47,"Edge- und Session-Sicherheit","TLS 1.3, CSP, Cookie-Flags, kein JWT, Audit-Mindestereignisse.",["plattform"]],
+   [48,"Umgebungen, CI, Release-Manifest","dev, bench, prod gleich gebaut; Manifest pinnt alle Repo-Tags.",["plattform","betrieb"]],
+   [49,"Ein Vertrag für alle Frontends","Angular/Spartan, Qt-Desktop und künftige Clients nutzen dieselbe /api/v1.",["plattform","raster","public"]],
+   [50,"Geocoder-Konfiguration in der DB","Provider-Reihenfolge, Limits und verschlüsselte API-Keys im Schema geocoder; Web-Konfiguration über die Admin-Oberfläche; erschöpft heißt später erneut versuchen.",["ort","betrieb"]],
+   [51,"Geocoder-Betriebsregeln","Kanonischer Ortsschlüssel aus geocoder, klare Endzustände, Kontingent vor dem Aufruf reserviert, nur gerundete Koordinaten verlassen den Host.",["ort","betrieb"]]
+  ];
+  let active=null;
+  const f=$("filters");
+  const mk=(key,label)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=label;b.setAttribute("aria-pressed",key===active?"true":"false");b.addEventListener("click",()=>{active=(active===key?null:key);render()});return b};
+  function render(){
+    f.replaceChildren(mk(null,"Alle Epics"),...ALL.map(k=>mk(k,E[k])));
+    if(active===null)f.firstChild.setAttribute("aria-pressed","true");
+    const q=$("q").value.trim().toLowerCase();
+    const list=AD.filter(a=>(active===null||a[3].includes(active))&&(!q||(a[1]+" "+a[2]).toLowerCase().includes(q)));
+    $("adcount").textContent=list.length+" von "+AD.length+" Entscheidungen";
+    $("adlist").replaceChildren(...list.map(a=>{
+      const d=document.createElement("article");d.className="ad";
+      const tags=a[3].length===ALL.length?["alle Epics"]:a[3].map(k=>E[k]);
+      d.innerHTML='<span class="id">AD-'+a[0]+'</span><h3></h3><p></p><div class="tags">'+tags.map(t=>'<span>'+t+'</span>').join("")+'</div>';
+      d.querySelector("h3").textContent=a[1];d.querySelector("p").textContent=a[2];
+      return d;
+    }));
+  }
+  $("q").addEventListener("input",render);
+  render();
+})();
+</script>
