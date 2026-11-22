@@ -1,6 +1,6 @@
 ---
 type: initiative
-title: GeoGallery
+title: "FlagMe - The Geo Gallery"
 parent: none
 sources:
   - _bmad-output/initiative-geogallery/forge-geogallery/forge-geogallery.md
@@ -11,11 +11,11 @@ after: []
 risk: high
 ---
 
-# GeoGallery
+# FlagMe - The Geo Gallery
 
 ## Description
 
-GeoGallery ist eine selbst gehostete, geografisch organisierte Bildverwaltung für eine feste Gruppe (Familie/Verein). Sie übernimmt den Bestand von ~200.000 Bildern, wächst bis 1 Mio. und veröffentlicht ausgewählte Alben in einer öffentlichen Galerie. Die Originale bleiben unverändert und sicher; Ort, Metadaten und Sichtbarkeit leben in der Datenbank. Grundlage ist die gehärtete Idee (forge), ergänzt um den Anforderungsentwurf v0.1 (draft). Bei Widersprüchen gilt die Forge-Datei, außer wo die Architektur-Spine sie per Entscheidung vom 2026-11-21 ersetzt (Notes).
+FlagMe - The Geo Gallery ist eine selbst gehostete, geografisch organisierte Bildverwaltung für eine feste Gruppe (Familie/Verein). Sie übernimmt den Bestand von ~200.000 Bildern, wächst bis 1 Mio. und veröffentlicht ausgewählte Alben in einer öffentlichen Galerie. Die Originale bleiben unverändert und sicher; Ort, Metadaten und Sichtbarkeit leben in der Datenbank. Grundlage ist die gehärtete Idee (forge), ergänzt um den Anforderungsentwurf v0.1 (draft). Bei Widersprüchen gilt die Forge-Datei, außer wo die Architektur-Spine sie per Entscheidung vom 2026-11-21 ersetzt (Notes).
 
 ## Outcome
 
@@ -59,7 +59,7 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 ## Constraints
 
 - Stack: Linux, C++23 mit Drogon (REST/JSON, Sessions, RBAC), PostgreSQL 18 + PostGIS (`GEOGRAPHY(Point,4326)`) + PGroonga, Angular 22 mit Spartan/UI, H2O (TLS, HTTP/2, HTTP/3, Reverse Proxy), libvips mit libheif für AVIF. Einzelne Komponenten dürfen Rust oder Go sein; die WebAuthn-Prüfung ist Rust (forge Einleitung; draft §2, Technologie-Stack; Decision 2026-11-21).
-- Ein Host mit Podman (Quadlets): die Container `h2o`, `geogallery` und `postgresql` laufen je als systemd-Unit, im `geogallery`-Container jeder Service als eigene systemd-Unit. Synchron gRPC über UDS (Protobuf) mit Socket Activation und gRPC Health; asynchron dauerhafte Job-Queues in PostgreSQL. Kein NATS; FlatBuffers nur zwischen api und Frontends, intern nie (forge §Architektur und Betrieb, §Verworfen; Decision 2026-11-21).
+- Ein Host mit Podman (Quadlets): die Container `h2o`, `flagme` und `postgresql` laufen je als systemd-Unit, im `flagme`-Container jeder Service als eigene systemd-Unit. Synchron gRPC über UDS (Protobuf) mit Socket Activation und gRPC Health; asynchron dauerhafte Job-Queues in PostgreSQL. Kein NATS; FlatBuffers nur zwischen api und Frontends, intern nie (forge §Architektur und Betrieb, §Verworfen; Decision 2026-11-21, 2026-11-22).
 - Leistungsziele bei 1 Mio. Bildern auf dem Referenzprofil M (8C/16T, 32 GB, NVMe), auch während eines laufenden Imports: Karte < 300 ms, Raster nächste Seite < 150 ms p95, Suche/Filter < 200 ms p95, API-Metadaten < 100 ms p95; Thumbnails statisch vom Edge. Profil S (4 Kerne, 8 GB) ist unterstützter Einstieg mit dokumentiert niedrigeren Zielen; die Architektur ist für alle Profile gleich, und die Profilzahlen gelten bis zum Benchmark in epic-import-pipeline als Schätzung (forge §Performance; Decision 2026-11-21).
 - Import ≥ 10.000 Bilder/h (JPEG/HEIC) auf Profil M mit niedrig priorisierten Workern; 10 gleichzeitige Uploads; Bestand ~200.000, Ziel 1 Mio. (forge §Performance; draft §17).
 - 99,5 % Verfügbarkeit ohne Wartungsfenster; Datensicherheit geht vor Hochverfügbarkeit (forge §Architektur und Betrieb).
@@ -109,3 +109,4 @@ Die Gruppe findet ihr gemeinsames Fotoarchiv über Ort, Ordner, Karte und Suche 
 - Decision: 2026-11-20, Nutzer — Backups werden nach endgültigem Löschen 90 Tage aufbewahrt; danach ist das Bild auch aus den Backups entfernt (R26, R30).
 - Decision: 2026-11-21, Nutzer — die Architektur-Spine ist Companion der Initiative; wo sie bewusst abweicht, gilt sie vor forge: PostgreSQL 18 statt 19, Podman-Container mit systemd-Units darin, FlatBuffers zwischen api und Frontends, Sichtbarkeitsbasis „alle angemeldeten“ mit Obergrenze des Owners (R4, R5), Leistungsziele je Hardware-Profil (M Referenz, S Einstieg), Restore = DB + Originale + Protokoll (R24), AVIF über libvips/libheif, Copyright immer öffentlich (R7), Rust für WebAuthn.
 - Decision: 2026-11-21, Nutzer — durch die Spine geklärt: Geocoding-Anbieter und Kontingente (Konfiguration in der DB, Start mit Nominatim; die Ebene „Region“ bildet epic-ort-karte ab), Zielhardware (Profile, verbindlich nach dem Benchmark in epic-import-pipeline), „privat“ auch gegenüber dem Admin (R29), Wiederverwendung der Snippets samt ihrer Konflikte (spine AD-36).
+- Decision: 2026-11-22, Nutzer — das Projekt heißt „FlagMe - The Geo Gallery“; der technische Kurzname ist `flagme` (Container, Image, Pfade, Proto-Pakete, Secrets), Service-, Bibliotheks- und Web-Repos heißen `flagme-<name>` (z. B. `flagme-api`), das Haupt-Repo `flag-me_gallery` hält weiter `contracts/`. Die Planungsordner (`initiative-geogallery` usw.) behalten ihren Namen. Die Spine nennt noch `geogallery` und wird per `bmad-architecture` nachgezogen; bis dahin gilt diese Entscheidung vor der Spine.

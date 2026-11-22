@@ -4,7 +4,7 @@
 id = 1
 type = "story"
 title = "Tracer: Browser erreicht über H2O, api und iam die Datenbank"
-description = "Legt die Repos und Ordner an (contracts/, deploy/, libs/service-core, services/api, services/iam, web/), baut H2O-Master mit mruby und TLS 1.3, das geogallery-Image mit systemd und je einer Unit, einem Unix-User und einem Socket für api und iam (Socket Activation), den postgresql-Container mit PG 18 + PostGIS + PGroonga und dem Schema iam (DB-Zugang aus der mit XChaCha20-Poly1305 verschlüsselten Datei, Schlüssel als Podman-Secret, AD-26), alles als Podman-Quadlets in der dev-Umgebung; die Angular-Shell (Spartan/UI) zeigt den Health-Stand, den die api per gRPC über UDS bei iam abfragt. Beweist die beiden riskantesten Teile: H2O ohne Releases und mehrere Socket-aktivierte Units im Container."
+description = "Legt die Repos und Ordner an (contracts/ und deploy/ im Haupt-Repo flag-me_gallery; libs/service-core, services/api, services/iam, web/ als eigene Repos flagme-service-core, flagme-api, flagme-iam, flagme-web), baut H2O-Master mit mruby und TLS 1.3, das flagme-Image mit systemd und je einer Unit, einem Unix-User und einem Socket für api und iam (Socket Activation), den postgresql-Container mit PG 18 + PostGIS + PGroonga und dem Schema iam (DB-Zugang aus der mit XChaCha20-Poly1305 verschlüsselten Datei, Schlüssel als Podman-Secret, AD-26), alles als Podman-Quadlets in der dev-Umgebung; die Angular-Shell (Spartan/UI) zeigt den Health-Stand, den die api per gRPC über UDS bei iam abfragt. Beweist die beiden riskantesten Teile: H2O ohne Releases und mehrere Socket-aktivierte Units im Container."
 verify = "Im Browser zeigt https://<dev-host>/ die Angular-Shell mit „api: gesund, iam: gesund, db: gesund“; nach `systemctl stop iam` im Container startet die nächste Anfrage iam per Socket Activation neu und zeigt wieder „gesund“."
 covers = []
 after = []
@@ -28,7 +28,7 @@ notes = ["Eine Person registriert den Passkey mit einem echten Authenticator."]
 id = 3
 type = "story"
 title = "CI baut jedes Repo, ein Release-Manifest rollt das Image aus"
-description = "GitHub Actions in jedem Repo, das Story 1 und 2 angelegt haben (Build, Tests, buf breaking für contracts/); releases/ im Haupt-Repo pinnt je Release die Tags von api, iam, webauthn, service-core, contracts und web; nur aus dem Manifest wird das geogallery-Image gebaut, privat nach GHCR gepusht und in der dev-Umgebung per Quadlet ausgerollt."
+description = "GitHub Actions in jedem Repo, das Story 1 und 2 angelegt haben (Build, Tests, buf breaking für contracts/); releases/ im Haupt-Repo pinnt je Release die Tags von api, iam, webauthn, service-core, contracts und web; nur aus dem Manifest wird das flagme-Image gebaut, privat nach GHCR gepusht und in der dev-Umgebung per Quadlet ausgerollt."
 verify = "Ein Merge auf main in einem Service-Repo läuft grün durch; ein neues Manifest erzeugt ein Image in GHCR, das in der dev-Umgebung läuft und dessen Health-Seite die Versionen aus dem Manifest zeigt; eine brechende Proto-Änderung lässt CI scheitern."
 covers = []
 after = [2]

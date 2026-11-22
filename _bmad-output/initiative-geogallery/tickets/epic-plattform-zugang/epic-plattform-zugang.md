@@ -16,7 +16,7 @@ risk: high
 
 ## Description
 
-Plattform-Baseline zuerst: die drei Podman-Container `h2o` (H2O-Master mit mruby, TLS 1.3, HTTP/2/3, CSP, Wartungsseite), `geogallery` (systemd mit den Services `api`, `iam` und `webauthn`, je eigener Unit, Unix-User und Socket mit Socket Activation) und `postgresql` (PG 18 + PostGIS + PGroonga), die gemeinsame Bibliothek `libs/service-core`, die Verträge unter `contracts/`, die Angular-Shell mit Spartan/UI, CI in jedem Repo, ein Release-Manifest und ein Image in GHCR, ausgerollt auf eine dev-Umgebung, die wie prod aufgebaut ist. Darauf legt ein Bootstrap-Kommando den ersten Admin an, der Admin pflegt Konten, Rollen und Gruppen in der Admin-Oberfläche, Mitglieder richten über einen Einmal-Link Passkey und TOTP ein und melden sich damit an, und ist die api nicht erreichbar, zeigt H2O die Wartungsseite.
+Plattform-Baseline zuerst: die drei Podman-Container `h2o` (H2O-Master mit mruby, TLS 1.3, HTTP/2/3, CSP, Wartungsseite), `flagme` (systemd mit den Services `api`, `iam` und `webauthn`, je eigener Unit, Unix-User und Socket mit Socket Activation) und `postgresql` (PG 18 + PostGIS + PGroonga), die gemeinsame Bibliothek `libs/service-core`, die Verträge unter `contracts/`, die Angular-Shell mit Spartan/UI, CI in jedem Repo, ein Release-Manifest und ein Image in GHCR, ausgerollt auf eine dev-Umgebung, die wie prod aufgebaut ist. Darauf legt ein Bootstrap-Kommando den ersten Admin an, der Admin pflegt Konten, Rollen und Gruppen in der Admin-Oberfläche, Mitglieder richten über einen Einmal-Link Passkey und TOTP ein und melden sich damit an, und ist die api nicht erreichbar, zeigt H2O die Wartungsseite.
 
 ## Outcome
 
@@ -34,13 +34,13 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 
 ## Constraints
 
-- Stack, Laufzeit (Podman/Quadlets, systemd-Units im `geogallery`-Container, gRPC über UDS mit Socket Activation und Health), Sicherheit (TLS 1.3, CSP, XSS-/CSRF-Schutz, Rate Limiting, Audit, Sessions serverseitig ohne JWT, Cookies Secure/HttpOnly/SameSite=Strict), JSON-Logs und OTel, 99,5 % ohne Wartungsfenster: wie in der Initiative (parent Constraints).
+- Stack, Laufzeit (Podman/Quadlets, systemd-Units im `flagme`-Container, gRPC über UDS mit Socket Activation und Health), Sicherheit (TLS 1.3, CSP, XSS-/CSRF-Schutz, Rate Limiting, Audit, Sessions serverseitig ohne JWT, Cookies Secure/HttpOnly/SameSite=Strict), JSON-Logs und OTel, 99,5 % ohne Wartungsfenster: wie in der Initiative (parent Constraints).
 - Bereitstellung auf eine dev-Umgebung, aufgebaut wie prod; CI über GitHub Actions in jedem Repo, das Image liegt privat in GHCR (Decision 2026-11-21).
 - `libs/service-core` ist die gemeinsame Grundlage aller C++-Services: gRPC über UDS mit Socket Activation, Methodenrechte per `SO_PEERCRED`, JSON-Logs, OTel, Health und Geheimnisse (Decision 2026-11-21).
 
 ## Done when
 
-- Ein Commit auf main baut in CI (mit `buf breaking` für `contracts/`); ein Release-Manifest pinnt die Stände, das `geogallery`-Image liegt in GHCR und läuft mit `h2o` und `postgresql` als Podman-Quadlets in der dev-Umgebung; gRPC Health über UDS meldet api, iam und webauthn gesund.
+- Ein Commit auf main baut in CI (mit `buf breaking` für `contracts/`); ein Release-Manifest pinnt die Stände, das `flagme`-Image liegt in GHCR und läuft mit `h2o` und `postgresql` als Podman-Quadlets in der dev-Umgebung; gRPC Health über UDS meldet api, iam und webauthn gesund.
 - Das Bootstrap-Kommando legt den ersten Admin an; der Admin legt ein Konto mit Rolle und Gruppe an; das Mitglied richtet über den Einmal-Link Passkey und TOTP ein und meldet sich mit jedem der beiden an; ein deaktiviertes oder gesperrtes Konto wird abgewiesen, und seine Session endet nach spätestens 60 s.
 - Eine Aktion ohne Berechtigung wird abgewiesen und im Audit-Log festgehalten; ein Service-Aufruf außerhalb des erlaubten Graphen wird abgewiesen; Cookies tragen Secure/HttpOnly/SameSite=Strict, und TLS 1.3, CSP, CSRF-Schutz und Rate Limit sind aktiv.
 - Ist die api gestoppt, liefert H2O die Wartungsseite; ein Neustart eines einzelnen Service im laufenden Container führt zu keiner Fehlerantwort.
@@ -65,3 +65,4 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 - Decision: 2026-11-21, Sofia (Entwurf) — Tracer ist Story 1 (Browser → H2O → api → iam → PostgreSQL mit Health, Socket Activation, verschlüsselte DB-Zugangsdaten); danach Story 2, der Passkey-Pfad mit webauthn, als unsicherster Teil. CI und Release-Manifest (Story 3) warten auf Story 2, weil das Manifest auch webauthn pinnt; Refactor sweep schließt das Epic, keine eigene End-to-End-Suite.
 - Decision: 2026-11-22, Nutzer — der Bootstrap gibt einen neuen Link aus, solange der erste Admin keinen Faktor hat, damit ein abgelaufener erster Link die Plattform nicht aussperrt (R1).
 - Decision: 2026-11-22, Nutzer — V1 ohne E-Mail- oder Notification-Service; der Admin sieht Einrichtungslinks in der Admin-Oberfläche und gibt sie über einen eigenen Kanal weiter (R3, R5); ein Notification-Service bleibt optional für später.
+- Decision: 2026-11-22, Nutzer — Umbenennung nach der Initiative-Entscheidung vom selben Tag: Container und Image heißen `flagme`, Story 1 legt die Service-, Bibliotheks- und Web-Repos als `flagme-<name>` an; Umfang und IDs bleiben.

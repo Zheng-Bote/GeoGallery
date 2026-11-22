@@ -13,7 +13,7 @@
 [core]
 user_name = "BMad"
 communication_language = "English"
-project_name = "GeoGallery"
+project_name = "FlagMe - The Geo Gallery"
 document_output_language = "English"
 output_folder = "{project-root}/_bmad-output"
 
