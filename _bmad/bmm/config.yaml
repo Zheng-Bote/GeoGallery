@@ -10,7 +10,7 @@ project_knowledge: "{project-root}/docs"
 
 # Core Configuration Values
 user_name: Bote
-project_name: GeoGallery
+project_name: "FlagMe - The Geo Gallery"
 communication_language: German
 document_output_language: English
 output_folder: "{project-root}/_bmad-output"
