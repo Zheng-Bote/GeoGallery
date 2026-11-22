@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 512 512"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Globus -->
+  <circle cx="256" cy="280" r="150"
+          fill="#1E3A5F"/>
+
+  <!-- Längen- und Breitengrade -->
+  <ellipse cx="256" cy="280" rx="150" ry="150"
+           fill="none" stroke="#00AFA0" stroke-width="8"/>
+
+  <ellipse cx="256" cy="280" rx="110" ry="150"
+           fill="none" stroke="#00AFA0" stroke-width="6"/>
+
+  <ellipse cx="256" cy="280" rx="60" ry="150"
+           fill="none" stroke="#00AFA0" stroke-width="6"/>
+
+  <ellipse cx="256" cy="280" rx="150" ry="110"
+           fill="none" stroke="#00AFA0" stroke-width="6"/>
+
+  <ellipse cx="256" cy="280" rx="150" ry="60"
+           fill="none" stroke="#00AFA0" stroke-width="6"/>
+
+  <!-- Flaggenmast -->
+  <line x1="320" y1="100"
+        x2="320" y2="250"
+        stroke="#D9E2EC"
+        stroke-width="10"
+        stroke-linecap="round"/>
+
+  <!-- Flagge -->
+  <path d="
+      M320 100
+      L400 120
+      L320 145
+      Z"
+      fill="#FF5A5F"/>
+
+  <!-- Markierungspunkt -->
+  <circle cx="320" cy="250" r="12"
+          fill="#FF5A5F"/>
+
+</svg>
