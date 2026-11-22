@@ -24,7 +24,7 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 
 ## Requirements
 
-- R1 (parent R1; Decision 2026-11-21): Ein einmaliges Bootstrap-Kommando im iam-Container legt den ersten Admin an und gibt einen Einrichtungslink aus; existiert bereits ein Admin, wird es abgewiesen.
+- R1 (parent R1; Decision 2026-11-21, 2026-11-22): Ein Bootstrap-Kommando im iam-Container legt den ersten Admin an und gibt einen Einrichtungslink aus; existiert bereits ein Admin mit eingerichtetem Faktor, wird es abgewiesen; hat der Admin noch keinen Faktor, gibt es einen neuen Link aus, und der alte wird ungültig.
 - R2 (parent R1): Der Admin legt in der Admin-Oberfläche Konten an, weist Rollen und Gruppen zu und setzt den Status aktiv/deaktiviert/gesperrt; ohne aktives Konto ist keine Anmeldung möglich, und eine Deaktivierung oder Sperre beendet laufende Sessions nach spätestens 60 s.
 - R3 (parent R1, R2; Decision 2026-11-21): Für jedes neue Konto erzeugt iam einen Einmal-Einrichtungslink, 24 h gültig, über den das Mitglied einen Passkey und optional TOTP einrichtet; ein abgelaufener oder schon benutzter Link wird abgewiesen.
 - R4 (parent R2): Mitglieder melden sich per WebAuthn/FIDO2 (Passkey, Windows Hello, YubiKey, Platform Authenticator) oder per Benutzername und TOTP-Code nach RFC 6238 an; jede andere Anmeldung wird abgewiesen.
