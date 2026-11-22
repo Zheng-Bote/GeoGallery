@@ -26,7 +26,7 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 
 - R1 (parent R1; Decision 2026-11-21, 2026-11-22): Ein Bootstrap-Kommando im iam-Container legt den ersten Admin an und gibt einen Einrichtungslink aus; existiert bereits ein Admin mit eingerichtetem Faktor, wird es abgewiesen; hat der Admin noch keinen Faktor, gibt es einen neuen Link aus, und der alte wird ungültig.
 - R2 (parent R1): Der Admin legt in der Admin-Oberfläche Konten an, weist Rollen und Gruppen zu und setzt den Status aktiv/deaktiviert/gesperrt; ohne aktives Konto ist keine Anmeldung möglich, und eine Deaktivierung oder Sperre beendet laufende Sessions nach spätestens 60 s.
-- R3 (parent R1, R2; Decision 2026-11-21): Für jedes neue Konto erzeugt iam einen Einmal-Einrichtungslink, 24 h gültig, über den das Mitglied einen Passkey und optional TOTP einrichtet; ein abgelaufener oder schon benutzter Link wird abgewiesen.
+- R3 (parent R1, R2; Decision 2026-11-21, 2026-11-22): Für jedes neue Konto erzeugt iam einen Einmal-Einrichtungslink, 24 h gültig, über den das Mitglied einen Passkey und optional TOTP einrichtet; der Admin sieht den Link in der Admin-Oberfläche und gibt ihn selbst weiter; ein abgelaufener oder schon benutzter Link wird abgewiesen.
 - R4 (parent R2): Mitglieder melden sich per WebAuthn/FIDO2 (Passkey, Windows Hello, YubiKey, Platform Authenticator) oder per Benutzername und TOTP-Code nach RFC 6238 an; jede andere Anmeldung wird abgewiesen.
 - R5 (parent R2; Decision 2026-11-21): Hat ein Mitglied keinen Faktor mehr, setzt der Admin seine Faktoren zurück und erzeugt einen neuen Einrichtungslink; beides steht im Audit-Log.
 - R6 (parent R3; Decision 2026-11-21): Rollen vergeben Berechtigungen aus einer geschlossenen Liste, mit den Standardrollen Viewer, Editor und Admin in einer vom Nutzer freigegebenen Zuordnung; eine Aktion ohne Berechtigung wird abgewiesen und im Audit-Log festgehalten, und Rollen ändern nie, was ein Nutzer sieht.
@@ -51,6 +51,7 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 - Gruppen werden hier nur verwaltet; ihre Wirkung auf Sichtbarkeit liefern epic-import-pipeline und epic-alben-sichtbarkeit.
 - Kein Produktivhost: prod folgt in gleicher Form, sobald die Hardware steht.
 - Keine Anbindung des Desktop-Clients (AD-49).
+- Kein E-Mail- oder Notification-Service: Einrichtungslinks gibt der Admin selbst weiter; ein Notification-Service bleibt optional für später (Decision 2026-11-22).
 
 ## References
 
@@ -62,3 +63,5 @@ Die Gruppe hat eine laufende, abgesicherte Plattform, auf der jedes Mitglied mit
 - Decision: 2026-11-21, Nutzer — der Prüfpunkt „Socket Activation mehrerer Sockets in systemd im Container“ (spine, Deferred → epic-import-pipeline) wird in den Tracer dieses Epics vorgezogen, zusammen mit dem Build von H2O-Master mit mruby.
 - Decision: 2026-11-21, Nutzer — das Epic rollt auf eine dev-Umgebung aus statt auf prod, weil die Zielhardware noch nicht feststeht.
 - Decision: 2026-11-21, Sofia (Entwurf) — Tracer ist Story 1 (Browser → H2O → api → iam → PostgreSQL mit Health, Socket Activation, verschlüsselte DB-Zugangsdaten); danach Story 2, der Passkey-Pfad mit webauthn, als unsicherster Teil. CI und Release-Manifest (Story 3) warten auf Story 2, weil das Manifest auch webauthn pinnt; Refactor sweep schließt das Epic, keine eigene End-to-End-Suite.
+- Decision: 2026-11-22, Nutzer — der Bootstrap gibt einen neuen Link aus, solange der erste Admin keinen Faktor hat, damit ein abgelaufener erster Link die Plattform nicht aussperrt (R1).
+- Decision: 2026-11-22, Nutzer — V1 ohne E-Mail- oder Notification-Service; der Admin sieht Einrichtungslinks in der Admin-Oberfläche und gibt sie über einen eigenen Kanal weiter (R3, R5); ein Notification-Service bleibt optional für später.
