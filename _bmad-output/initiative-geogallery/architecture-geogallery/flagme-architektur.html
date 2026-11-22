@@ -1,4 +1,4 @@
-<title>GeoGallery Architektur</title>
+<title>FlagMe Architektur</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,8 +103,8 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-
     <circle cx="912" cy="208" r="5" fill="var(--ochre)"/>
   </svg>
   <div class="wrap">
-    <span class="eyebrow">Architektur-Spine · Initiative · Stand 21.11.2026</span>
-    <h1>GeoGallery Architektur</h1>
+    <span class="eyebrow">Architektur-Spine · Initiative · Stand 22.11.2026</span>
+    <h1>FlagMe Architektur</h1>
     <p class="lede">Wie die acht Epics unabhängig voneinander gebaut werden und trotzdem zusammenpassen: wer welche Daten besitzt, wer wen aufrufen darf und warum ein privates Bild nie öffentlich wird.</p>
     <div class="facts">
       <span><b>1 Mio.</b>Bilder als Zielbestand</span>
@@ -123,7 +123,7 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-
 <section id="ueberblick">
   <span class="grid-ref">A1 · ÜBERBLICK</span>
   <h2>Ein Host, drei Container, klare Besitzer</h2>
-  <p>GeoGallery läuft auf einem Linux-Host. H2O nimmt alle Anfragen an, die Drogon-API übersetzt sie, und dahinter arbeiten fachliche Services, die jeweils ihre eigenen Daten besitzen. Alle Services liegen in einem Container, in dem systemd jede Komponente als eigene Unit mit eigenem Unix-User startet.</p>
+  <p>FlagMe - The Geo Gallery läuft auf einem Linux-Host. H2O nimmt alle Anfragen an, die Drogon-API übersetzt sie, und dahinter arbeiten fachliche Services, die jeweils ihre eigenen Daten besitzen. Alle Services liegen in einem Container, in dem systemd jede Komponente als eigene Unit mit eigenem Unix-User startet.</p>
   <div class="diagram"><pre class="mermaid">
 flowchart TB
   subgraph Host["Linux-Host · Podman + Quadlet"]
@@ -131,7 +131,7 @@ flowchart TB
     subgraph H2O["Container h2o"]
       edge["H2O · TLS 1.3 · Signaturprüfung"]
     end
-    subgraph GG["Container geogallery · systemd"]
+    subgraph GG["Container flagme · systemd"]
       api; iam; catalog; ingest; media; geocoder; webauthn; ba["backup-adapter"]
     end
     subgraph PG["Container postgresql"]
@@ -308,7 +308,7 @@ sequenceDiagram
     <thead><tr><th>Thema</th><th>Ticket</th><th>Architektur</th></tr></thead>
     <tbody>
       <tr><td>Datenbank</td><td>PostgreSQL 19</td><td>Start mit PostgreSQL 18; Upgrade ist Betriebssache (AD-37)</td></tr>
-      <tr><td>Laufzeit</td><td>Komponenten als systemd-Units</td><td>Podman: h2o, geogallery (systemd innen), postgresql (AD-25)</td></tr>
+      <tr><td>Laufzeit</td><td>Komponenten als systemd-Units</td><td>Podman: h2o, flagme (systemd innen), postgresql (AD-25)</td></tr>
       <tr><td>FlatBuffers</td><td>verworfen</td><td>zwischen API und Frontend erwünscht, intern weiterhin nicht (AD-30)</td></tr>
       <tr><td>Sichtbarkeit</td><td>R4/R5 „restriktivste gewinnt“</td><td>Obergrenze + Basis, Alben erweitern nur, Zurücknehmen senkt Obergrenze (AD-18, AD-19)</td></tr>
       <tr><td>Leistungsziele</td><td>auf dem Zielhost</td><td>je Hardware-Profil; S mit niedrigeren Zielen (AD-22)</td></tr>
@@ -412,7 +412,7 @@ sequenceDiagram
    [22,"Hardware-Profile","M Referenz, S Einstieg, XS Grenzfall; nur Konfiguration unterscheidet sie.",ALL],
    [23,"Sprachneutrale Verträge","C++23, Rust oder Go, solange alle Verträge erfüllt sind.",ALL],
    [24,"WebAuthn in Rust","Zustandslose Prüfung mit webauthn-rs; Credentials besitzt iam.",["plattform"]],
-   [25,"Drei Podman-Container","h2o, geogallery (systemd innen), postgresql; Updates je Service.",["plattform","betrieb"]],
+   [25,"Drei Podman-Container","h2o, flagme (systemd innen), postgresql; Updates je Service.",["plattform","betrieb"]],
    [26,"Geheimnisse","Mit XChaCha20-Poly1305 verschlüsselte Datei; Schlüssel als Podman-Secret.",["plattform","betrieb"]],
    [27,"Backup-Vertrag","Sicherungsstatus je Original, PITR, 90 Tage; Restore = DB + Originale + Ledger.",["betrieb"]],
    [28,"Expand/Contract","Migrationen nur abwärtskompatibel.",ALL],
@@ -421,7 +421,7 @@ sequenceDiagram
    [31,"Cursor-Pagination","Bildsammlungen nur per opakem Cursor, nie per OFFSET.",["raster","ort","public"]],
    [32,"Suche über PGroonga","Ein Suchweg für alle Schriften; anonym nur über die öffentliche Suchspalte.",["raster","public"]],
    [33,"Kartencluster per Quadkey","Vorberechneter Kachelschlüssel; anonym nur über öffentliche Koordinaten.",["ort","public"]],
-   [34,"Verträge im Haupt-Repo","contracts/ mit proto, fbs, openapi, jobs, permissions; Service-Repos binden per Tag.",ALL],
+   [34,"Verträge im Haupt-Repo","Haupt-Repo flag-me_gallery mit contracts/ (proto, fbs, openapi, jobs, permissions); Repos flagme-<name> binden per Tag.",ALL],
    [35,"Audit in der API","Audit-Plugin in eigenem Schema, inhaltsfrei.",["plattform","betrieb"]],
    [36,"Toolchain und Wiederverwendung","C++23, Snippet-Übernahmen, AVIF über libvips ohne Metadaten.",ALL],
    [37,"PostgreSQL 18","Start auf PG 18 mit PostGIS 3.7 und PGroonga; Upgrade ist Betrieb.",ALL],

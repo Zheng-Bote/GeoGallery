@@ -1,20 +1,20 @@
 ---
-name: 'GeoGallery'
+name: 'FlagMe - The Geo Gallery'
 type: architecture-spine
 purpose: build-substrate
 altitude: initiative
 paradigm: 'Microservices auf einem Host: Edge → BFF → fachliche Services mit Database-per-Service (Schema-Variante); sync gRPC/UDS, async dauerhafte Job-Queues mit Outbox'
-scope: 'GeoGallery V1, ganze Initiative (8 Epics)'
+scope: 'FlagMe - The Geo Gallery V1, ganze Initiative (8 Epics)'
 status: final
 created: '2026-11-20'
-updated: '2026-11-21'
+updated: '2026-11-22'
 binds: [R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31]
 sources:
   - _bmad-output/initiative-geogallery/initiative-geogallery.md
   - /Users/zb_bamboo/Documents/DEV/CPP/gallery_snippets
 ---
 
-# Architecture Spine — GeoGallery
+# Architecture Spine — FlagMe - The Geo Gallery
 
 ## Design Paradigm
 
@@ -124,7 +124,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 
 - **Binds:** all
 - **Prevents:** Prozesse außerhalb des Graphen erreichen einen Service.
-- **Rule:** Jeder Service läuft unter eigenem Unix-User; `/run/geogallery/<service>.sock` ist nur für die Gruppen der im Graphen erlaubten Aufrufer zugänglich.
+- **Rule:** Jeder Service läuft unter eigenem Unix-User; `/run/flagme/<service>.sock` ist nur für die Gruppen der im Graphen erlaubten Aufrufer zugänglich.
 
 ### AD-10 — Rechteprüfung beim Datenbesitzer
 
@@ -147,7 +147,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
   - h2o prüft die Signatur lokal (mruby, konstantzeitiger Vergleich) über den vollen Pfad und reicht per `reproxy` an die Dateiauslieferung; ohne gültige Signatur 404. Kein anderes Mapping auf `/storage/derivatives`.
   - `Cache-Control: private, max-age=<Restlaufzeit>`; nur Bilder mit `vis_public` dürfen `public` tragen. Kein geteilter Cache/CDN in V1.
   - Papierkorb, Zurücknehmen, Einengung auf nicht-public und endgültiges Löschen erhöhen `derivative_rev` (media benennt um), damit alte URLs sofort 404 liefern. Weitergabe einer URL durch Angemeldete bis Ablauf ist akzeptiert.
-  - Der HMAC-Schlüssel ist ein Podman-Secret in `geogallery` und `h2o`. Originale werden nie ausgeliefert.
+  - Der HMAC-Schlüssel ist ein Podman-Secret in `flagme` und `h2o`. Originale werden nie ausgeliefert.
 
 ### AD-13 — Storage-Layout und Schreibrechte [ADOPTED]
 
@@ -246,7 +246,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 
 - **Binds:** all, Betrieb
 - **Prevents:** Abweichende Deployment-Formen je Epic.
-- **Rule:** Podman mit Quadlets; Container `h2o`, `geogallery`, `postgresql`, jeder als systemd-Unit auf dem Host. Im `geogallery`-Container läuft systemd als Init mit einer Unit, einem Unix-User und einem Socket je Service. Gemeinsame Volumes: api-Socket zwischen h2o und geogallery; `/storage/derivatives` in h2o nur lesend; `/storage` gesamt in geogallery; `uploads/` zusätzlich für den SFTP-Dienst des Hosts. Normale Updates tauschen einzelne Services im laufenden `geogallery`-Container (`systemctl restart`, Socket Activation puffert Anfragen); ein neues Image nur für Basis-Updates, mit der Wartungsseite (R25) als geplantem Verhalten.
+- **Rule:** Podman mit Quadlets; Container `h2o`, `flagme`, `postgresql`, jeder als systemd-Unit auf dem Host. Im `flagme`-Container läuft systemd als Init mit einer Unit, einem Unix-User und einem Socket je Service. Gemeinsame Volumes: api-Socket zwischen h2o und flagme; `/storage/derivatives` in h2o nur lesend; `/storage` gesamt in flagme; `uploads/` zusätzlich für den SFTP-Dienst des Hosts. Normale Updates tauschen einzelne Services im laufenden `flagme`-Container (`systemctl restart`, Socket Activation puffert Anfragen); ein neues Image nur für Basis-Updates, mit der Wartungsseite (R25) als geplantem Verhalten.
 
 ### AD-26 — Geheimnisse [ADOPTED]
 
@@ -303,7 +303,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 
 - **Binds:** all
 - **Prevents:** Jedes Service-Repo hält eine eigene Kopie der Verträge.
-- **Rule:** Das Haupt-Repo GeoGallery hält Doku, Architektur und `contracts/` (`proto/geogallery/<service>/v1/` mit `access.yaml`, `fbs/`, `openapi/`, `jobs/`, `permissions/`). Paket `geogallery.<service>.v1`; brechende Änderungen nur als `v2` daneben, `buf breaking` in CI. Service-Repos und gemeinsame Bibliotheken sind eigene Repos, lokal als vom Haupt-Repo ignorierte Ordner, und binden Verträge über einen festen Git-Tag.
+- **Rule:** Das Haupt-Repo `flag-me_gallery` hält Doku, Architektur und `contracts/` (`proto/flagme/<service>/v1/` mit `access.yaml`, `fbs/`, `openapi/`, `jobs/`, `permissions/`). Paket `flagme.<service>.v1`; brechende Änderungen nur als `v2` daneben, `buf breaking` in CI. Service-Repos, gemeinsame Bibliotheken und das Web-Frontend sind eigene Repos namens `flagme-<name>` (z. B. `flagme-api`, `flagme-service-core`, `flagme-web`), lokal als vom Haupt-Repo ignorierte Ordner, und binden Verträge über einen festen Git-Tag.
 
 ### AD-35 — Audit gehört der api [ADOPTED]
 
@@ -390,7 +390,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 
 - **Binds:** all, epic-plattform-zugang
 - **Prevents:** Ein Container-Image aus zufälligen Ständen getrennter Repos; Umgebungen mit abweichendem Aufbau.
-- **Rule:** Umgebungen `dev`, `bench` (Hardware-Profil, Testbestand) und `prod` sind gleich aufgebaut und unterscheiden sich nur in Konfiguration und Profil. Jedes Repo hat CI mit Build, Tests und (für Verträge) `buf breaking`. Ein Release-Manifest im Haupt-Repo pinnt je Release den Tag jedes Service-Repos, der Verträge und des Web-Builds; nur aus ihm wird das `geogallery`-Image gebaut.
+- **Rule:** Umgebungen `dev`, `bench` (Hardware-Profil, Testbestand) und `prod` sind gleich aufgebaut und unterscheiden sich nur in Konfiguration und Profil. Jedes Repo hat CI mit Build, Tests und (für Verträge) `buf breaking`. Ein Release-Manifest im Haupt-Repo pinnt je Release den Tag jedes Service-Repos, der Verträge und des Web-Builds; nur aus ihm wird das `flagme`-Image gebaut.
 
 ### AD-49 — Ein Vertrag für alle Frontends [ADOPTED]
 
@@ -416,7 +416,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 - **Prevents:** Ein Ort pro Anbieter statt eines kanonischen Orts; endlose Wiederholungen; überschrittene Kontingente durch Uhren, Zeitzonen oder Restore; Koordinaten im Betrieb.
 - **Rule:**
   - **Aufrufe:** api ruft in geocoder nur `Admin/*` (mit Principal, `system.admin` aus `contracts/permissions/`) und Health; `Submit`/`Delete` nur von der uid von catalog (AD-38).
-  - **Ergebnisform:** geocoder normalisiert auf `geogallery.geocoder.v1.Location`: je Ebene kanonischer Schlüssel (ISO 3166-1/-2, darunter anbieterunabhängig) und Namen je konfigurierter Sprache; die Abbildung der Ebene „Region“ macht geocoder; die Anbieter-ID ist nur Herkunftsinfo. catalog vergibt Orts-UUIDs nur über den kanonischen Schlüssel.
+  - **Ergebnisform:** geocoder normalisiert auf `flagme.geocoder.v1.Location`: je Ebene kanonischer Schlüssel (ISO 3166-1/-2, darunter anbieterunabhängig) und Namen je konfigurierter Sprache; die Abbildung der Ebene „Region“ macht geocoder; die Anbieter-ID ist nur Herkunftsinfo. catalog vergibt Orts-UUIDs nur über den kanonischen Schlüssel.
   - **Endzustände:** `FOUND | NO_RESULT | INVALID_INPUT | DEFERRED`. Die ersten drei sind terminal und werden per `ReportLocation` gemeldet (catalog → Ort, „Ort fehlt“ bzw. Prüfliste); nur `DEFERRED` geht nach `retry_wait`. catalog prüft Koordinaten vor `Submit`.
   - **Jobs:** höchstens ein offener Job je `image_id`; ein höherer `geo_rev` ersetzt ihn; `Delete` wirkt in jedem Zustand. `QUOTA_EXHAUSTED` zählt keinen Versuch und wartet bis `next_reset_at`; `PROVIDER_UNAVAILABLE` nutzt normalen Backoff ohne Obergrenze. Worker holen einen Job erst nach reserviertem Takt-Slot; Neuimporte vor Bestand.
   - **Kontingent:** Reset als IANA-Zeitzone + lokale Uhrzeit → `next_reset_at timestamptz`; es zählt nur die DB-Uhr. Slot und Kontingent werden vor dem HTTP-Aufruf in einem Statement reserviert; auch Fehlaufrufe zählen. Nach einem Restore gilt das Kontingent bis zum nächsten Reset als verbraucht.
@@ -427,7 +427,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 
 | Concern | Convention |
 | --- | --- |
-| Service- und Unit-Namen | `api`, `iam`, `catalog`, `ingest`, `media`, `geocoder`, `webauthn`, `backup-adapter`; Socket `/run/geogallery/<service>.sock`; Schema = Service-Name |
+| Service- und Unit-Namen | `api`, `iam`, `catalog`, `ingest`, `media`, `geocoder`, `webauthn`, `backup-adapter`; Socket `/run/flagme/<service>.sock`; Schema = Service-Name |
 | IDs | UUIDv7 (AD-4) |
 | Zeiten | System `timestamptz` UTC; Aufnahmezeit Ortszeit + Offset (AD-7); API RFC 3339 |
 | JSON | `camelCase`, Envelope (AD-29) |
@@ -436,7 +436,7 @@ Keine eigenen Services für public, admin/monitoring oder audit: öffentliche Ga
 | Logs | JSON nach journald, Felder mindestens `ts`, `level`, `service`, `requestId`; Inhalt nach AD-44; Access-Logs ohne Query-String und Signatur |
 | Metriken | OpenTelemetry (OTLP) an lokalen Collector; keine `image_id` als Label |
 | Verfügbarkeit | externe Probe auf `/health` misst die 99,5 % |
-| Konfiguration | `/etc/geogallery/<service>.*` im Container; Geheimnisse nach AD-26 |
+| Konfiguration | `/etc/flagme/<service>.*` im Container; Geheimnisse nach AD-26 |
 | Mutation von Bilddaten | nur catalog (AD-2); Publikumsspalten nur über AD-42 |
 
 ## Stack
@@ -470,7 +470,7 @@ flowchart TB
     subgraph H2O["Container h2o"]
       edge[H2O + mruby-Signaturprüfung]
     end
-    subgraph GG["Container geogallery (systemd)"]
+    subgraph GG["Container flagme (systemd)"]
       api; iam; catalog; ingest; media; geocoder; webauthn; badapter[backup-adapter]
     end
     subgraph PG["Container postgresql"]
@@ -502,20 +502,20 @@ erDiagram
 ```
 
 ```text
-GeoGallery/                 # Haupt-Repo
+flag-me_gallery/            # Haupt-Repo
   docs/                     # globale Doku
   _bmad-output/             # Initiative, Epics, Architektur
   contracts/
-    proto/geogallery/<service>/v1/   # inkl. access.yaml
+    proto/flagme/<service>/v1/       # inkl. access.yaml
     fbs/                    # api ↔ Frontend
     openapi/                # REST-Vertrag + Code-Registry
     jobs/                   # Job-Form (AD-16)
     permissions/            # Berechtigungsnamen (AD-10)
   releases/                 # Release-Manifeste (AD-48)
   deploy/                   # Quadlets, H2O-Konfiguration
-  services/<name>/          # je eigenes Repo, vom Haupt-Repo ignoriert
-  libs/<name>/              # je eigenes Repo, vom Haupt-Repo ignoriert
-  web/                      # Angular, eigenes Repo, vom Haupt-Repo ignoriert
+  services/<name>/          # je eigenes Repo flagme-<name>, vom Haupt-Repo ignoriert
+  libs/<name>/              # je eigenes Repo flagme-<name>, vom Haupt-Repo ignoriert
+  web/                      # Angular, eigenes Repo flagme-web, vom Haupt-Repo ignoriert
 ```
 
 ## Capability → Architecture Map
